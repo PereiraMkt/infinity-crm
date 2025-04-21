@@ -1,31 +1,19 @@
 
-import { Bell, UserCircle, Settings } from "lucide-react";
+import { Bell, Search, UserCircle, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface TopNavProps {
   onMenuButtonClick: () => void;
-  className?: string;
 }
 
-export function TopNav({ onMenuButtonClick, className }: TopNavProps) {
+export function TopNav({ onMenuButtonClick }: TopNavProps) {
   const { user, profile } = useAuth();
-  const location = useLocation();
-
-  // Mostra o nome do módulo no topo (ex: "Produção", "Clientes" etc)
-  const getModuleName = () => {
-    const path = location.pathname;
-    if (path.startsWith("/app/production")) return "Produção";
-    if (path.startsWith("/app/clients")) return "Clientes";
-    if (path.startsWith("/app/sales-funnel")) return "Funil de Vendas";
-    if (path.startsWith("/app/dashboard")) return "Dashboard";
-    // ... pode adicionar mais se quiser
-    return "Sistema";
-  };
 
   return (
-    <header className={`h-16 px-4 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between sticky top-0 z-30 ${className || ''}`}>
+    <header className="h-16 px-4 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between">
       <div className="flex items-center gap-2 md:gap-4">
         <Button
           variant="ghost"
@@ -33,16 +21,29 @@ export function TopNav({ onMenuButtonClick, className }: TopNavProps) {
           onClick={onMenuButtonClick}
           className="md:hidden"
         >
+          <Search className="h-5 w-5" />
           <span className="sr-only">Menu</span>
         </Button>
-        <div className="ml-2">
-          <h1 className="text-xl font-semibold">{getModuleName()}</h1>
+        
+        <div className="hidden sm:flex items-center gap-2 ml-2">
+          <div className="relative rounded-md shadow-sm">
+            <Input
+              type="search"
+              placeholder="Pesquisar..."
+              className="pl-9 h-9 md:w-[200px] lg:w-[300px] bg-background"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </div>
         </div>
       </div>
+      
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" className="text-foreground">
           <Bell className="h-5 w-5" />
         </Button>
+        
         <Link to="/app/user-settings">
           <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 relative">
             {profile?.avatar_url ? (
@@ -56,6 +57,7 @@ export function TopNav({ onMenuButtonClick, className }: TopNavProps) {
             )}
           </Button>
         </Link>
+        
         <Link to="/app/settings">
           <Button variant="ghost" size="icon">
             <Settings className="h-5 w-5" />

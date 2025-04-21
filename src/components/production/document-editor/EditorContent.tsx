@@ -20,18 +20,19 @@ const EditorContent = ({
 }: EditorContentProps) => {
   const editorRef = useRef<HTMLDivElement>(null);
 
-  // Set up the editor on component mount or when content changes externally
+  // Set up the editor on component mount
   useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== content) {
+    if (editorRef.current) {
       editorRef.current.innerHTML = content.replace(/\n/g, "<br/>");
+      editorRef.current.focus();
     }
-  }, [content]);
+  }, []);
 
   // Handle input changes
   const handleInput = () => {
     if (editorRef.current) {
       // Get content and update state
-      const newContent = editorRef.current.innerHTML;
+      const newContent = editorRef.current.innerHTML.replace(/<br>/g, "\n");
       onUpdateContent(newContent);
     }
   };
@@ -44,33 +45,13 @@ const EditorContent = ({
     document.execCommand("insertText", false, text);
   };
 
-  // Handle key combinations for formatting
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Ctrl+B for bold
-    if (e.ctrlKey && e.key === 'b') {
-      e.preventDefault();
-      document.execCommand('bold');
-    }
-    // Ctrl+I for italic
-    else if (e.ctrlKey && e.key === 'i') {
-      e.preventDefault();
-      document.execCommand('italic');
-    }
-    // Ctrl+U for underline
-    else if (e.ctrlKey && e.key === 'u') {
-      e.preventDefault();
-      document.execCommand('underline');
-    }
-  };
-
   return (
     <div
-      className="w-full h-full outline-none overflow-auto"
+      className="w-full h-full p-8 outline-none overflow-auto"
       contentEditable={true}
       ref={editorRef}
       onInput={handleInput}
       onPaste={handlePaste}
-      onKeyDown={handleKeyDown}
       style={{
         fontFamily,
         color: textColor,

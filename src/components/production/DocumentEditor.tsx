@@ -1,314 +1,584 @@
+import { useState, useEffect } from "react";
+import { Pencil, Eye, ChevronLeft, ChevronRight, FileText, Folder, FolderPlus, FilePlus, Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tree, TreeItem } from "@/components/ui/tree";
+import FormatToolbar from "./document-editor/FormatToolbar";
+import EditorContent from "./document-editor/EditorContent";
+import PreviewContent from "./document-editor/PreviewContent";
+import { cn } from "@/lib/utils";
 
-import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import FormatToolbar from './document-editor/FormatToolbar';
-import EditorContent from './document-editor/EditorContent';
-import PreviewContent from './document-editor/PreviewContent';
-import { Button } from '@/components/ui/button';
-import { Folder, Save, FileText, Download, Upload } from 'lucide-react';
+interface DocumentFolder {
+  id: string;
+  name: string;
+  files: Document[];
+  folders?: DocumentFolder[];
+}
 
 interface Document {
   id: string;
-  title: string;
+  name: string;
   content: string;
-  createdAt: Date;
-  updatedAt: Date;
+  fontFamily: string;
+  textColor: string;
+  backgroundColor: string;
+  textAlignment: string;
+  pages?: number;
 }
 
 const DocumentEditor = () => {
-  const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
-  const [content, setContent] = useState<string>('<h1>Documento Novo</h1><p>Comece a digitar seu conteúdo aqui...</p>');
-  const [fontFamily, setFontFamily] = useState<string>('Inter, sans-serif');
-  const [textColor, setTextColor] = useState<string>('#000000');
-  const [backgroundColor, setBackgroundColor] = useState<string>('#ffffff');
-  const [textAlignment, setTextAlignment] = useState<string>('left');
-  const [lineHeight, setLineHeight] = useState<string>('1.5');
-  const [documents, setDocuments] = useState<Document[]>([
+  const [view, setView] = useState<"edit" | "preview">("edit");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [content, setContent] = useState<string>("# Documento sem título\n\nComece a digitar seu conteúdo aqui...");
+  const [fontFamily, setFontFamily] = useState<string>("Inter");
+  const [textColor, setTextColor] = useState<string>("#1f2937");
+  const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
+  const [textAlignment, setTextAlignment] = useState<string>("left");
+  const [folders, setFolders] = useState<DocumentFolder[]>([
     {
-      id: '1',
-      title: 'Documento Inicial',
-      content: '<h1>Documento Novo</h1><p>Comece a digitar seu conteúdo aqui...</p>',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      id: "1",
+      name: "Documentos",
+      files: [
+        { id: "1", name: "Documento 1", content: "# Documento 1\n\nConteúdo do documento 1...", fontFamily: "Inter", textColor: "#1f2937", backgroundColor: "#ffffff", textAlignment: "left" },
+        { id: "2", name: "Documento 2", content: "# Documento 2\n\nConteúdo do documento 2...", fontFamily: "Inter", textColor: "#1f2937", backgroundColor: "#ffffff", textAlignment: "left" }
+      ],
+      folders: [
+        {
+          id: "2",
+          name: "Procedimentos",
+          files: [
+            { id: "3", name: "Procedimento 1", content: "# Procedimento 1\n\nPassos do procedimento 1...", fontFamily: "Inter", textColor: "#1f2937", backgroundColor: "#ffffff", textAlignment: "left" }
+          ]
+        }
+      ]
     }
   ]);
-  const [activeDocument, setActiveDocument] = useState<Document | null>(documents[0]);
-  const [showFileExplorer, setShowFileExplorer] = useState(true);
-  
-  const { toast } = useToast();
+  const [activeDocument, setActiveDocument] = useState<Document | null>(null);
+  const [newItemName, setNewItemName] = useState<string>("");
+  const [isCreatingFile, setIsCreatingFile] = useState<boolean>(false);
+  const [isCreatingFolder, setIsCreatingFolder] = useState<boolean>(false);
+  const [currentFolderId, setCurrentFolderId] = useState<string>("1");
+  const [fullscreenEdit, setFullscreenEdit] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
-    // When active document changes, update content
-    if (activeDocument) {
-      setContent(activeDocument.content);
+    if (folders.length > 0 && folders[0].files.length > 0 && !activeDocument) {
+      setActiveDocument(folders[0].files[0]);
+      setContent(folders[0].files[0].content);
+      setFontFamily(folders[0].files[0].fontFamily);
+      setTextColor(folders[0].files[0].textColor);
+      setBackgroundColor(folders[0].files[0].backgroundColor);
+      setTextAlignment(folders[0].files[0].textAlignment);
+      setTotalPages(folders[0].files[0].pages || 1);
     }
-  }, [activeDocument]);
+  }, [folders, activeDocument]);
 
-  const handleUpdateFormatting = (property: string, value: string) => {
-    switch (property) {
-      case 'fontFamily':
-        setFontFamily(value);
-        break;
-      case 'textColor':
-        setTextColor(value);
-        break;
-      case 'backgroundColor':
-        setBackgroundColor(value);
-        break;
-      case 'textAlignment':
-        setTextAlignment(value);
-        break;
-      case 'lineHeight':
-        setLineHeight(value);
-        break;
+  const findFolderById = (id: string, folderList: DocumentFolder[]): DocumentFolder | null => {
+    for (const folder of folderList) {
+      if (folder.id === id) return folder;
+      if (folder.folders) {
+        const found = findFolderById(id, folder.folders);
+        if (found) return found;
+      }
     }
+    return null;
+  };
+
+  const findDocumentById = (id: string, folderList: DocumentFolder[]): Document | null => {
+    for (const folder of folderList) {
+      const file = folder.files.find(f => f.id === id);
+      if (file) return file;
+      if (folder.folders) {
+        const found = findDocumentById(id, folder.folders);
+        if (found) return found;
+      }
+    }
+    return null;
   };
 
   const handleUpdateContent = (newContent: string) => {
     setContent(newContent);
     
+    const estimatedPages = Math.max(1, Math.ceil(newContent.length / 2000));
+    setTotalPages(estimatedPages);
+    
     if (activeDocument) {
-      const updatedDoc = {
-        ...activeDocument,
+      const updatedDocument = { 
+        ...activeDocument, 
         content: newContent,
-        updatedAt: new Date()
+        pages: estimatedPages
+      };
+      setActiveDocument(updatedDocument);
+      
+      const updateDocumentInFolders = (folderList: DocumentFolder[]): DocumentFolder[] => {
+        return folderList.map(folder => {
+          const updatedFiles = folder.files.map(file => 
+            file.id === activeDocument.id ? updatedDocument : file
+          );
+          
+          return {
+            ...folder,
+            files: updatedFiles,
+            folders: folder.folders ? updateDocumentInFolders(folder.folders) : undefined
+          };
+        });
       };
       
-      // Update documents array
-      setDocuments(docs => 
-        docs.map(doc => doc.id === activeDocument.id ? updatedDoc : doc)
-      );
-      
-      // Update active document
-      setActiveDocument(updatedDoc);
+      setFolders(updateDocumentInFolders(folders));
     }
   };
 
-  const handleSave = () => {
+  const handleUpdateFormatting = (property: string, value: string) => {
+    if (property === 'fontFamily') setFontFamily(value);
+    if (property === 'textColor') setTextColor(value);
+    if (property === 'backgroundColor') setBackgroundColor(value);
+    if (property === 'textAlignment') setTextAlignment(value);
+    
     if (activeDocument) {
-      const updatedDoc = {
-        ...activeDocument,
-        content: content,
-        updatedAt: new Date()
+      const updatedDocument = { ...activeDocument, [property]: value };
+      setActiveDocument(updatedDocument);
+      
+      const updateDocumentInFolders = (folderList: DocumentFolder[]): DocumentFolder[] => {
+        return folderList.map(folder => {
+          const updatedFiles = folder.files.map(file => 
+            file.id === activeDocument.id ? updatedDocument : file
+          );
+          
+          return {
+            ...folder,
+            files: updatedFiles,
+            folders: folder.folders ? updateDocumentInFolders(folder.folders) : undefined
+          };
+        });
       };
       
-      setDocuments(docs => 
-        docs.map(doc => doc.id === activeDocument.id ? updatedDoc : doc)
-      );
-      
-      setActiveDocument(updatedDoc);
-      
-      toast({
-        title: "Documento salvo",
-        description: `${activeDocument.title} foi salvo com sucesso.`,
-      });
+      setFolders(updateDocumentInFolders(folders));
     }
   };
 
-  const handleNewDocument = () => {
-    const newDoc: Document = {
+  const handleCreateFile = () => {
+    if (newItemName.trim() === "") return;
+    
+    const newFile: Document = {
       id: Date.now().toString(),
-      title: `Novo Documento ${documents.length + 1}`,
-      content: '<h1>Documento Novo</h1><p>Comece a digitar seu conteúdo aqui...</p>',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      name: newItemName,
+      content: `# ${newItemName}\n\nNovo documento...`,
+      fontFamily: "Inter",
+      textColor: "#1f2937",
+      backgroundColor: "#ffffff",
+      textAlignment: "left"
     };
     
-    setDocuments(prev => [...prev, newDoc]);
-    setActiveDocument(newDoc);
-    setContent(newDoc.content);
+    const updateFoldersWithNewFile = (folderList: DocumentFolder[]): DocumentFolder[] => {
+      return folderList.map(folder => {
+        if (folder.id === currentFolderId) {
+          return {
+            ...folder,
+            files: [...folder.files, newFile]
+          };
+        }
+        
+        return {
+          ...folder,
+          folders: folder.folders ? updateFoldersWithNewFile(folder.folders) : undefined
+        };
+      });
+    };
     
-    toast({
-      title: "Novo documento criado",
-      description: "Um novo documento foi criado. Comece a editar!"
-    });
+    setFolders(updateFoldersWithNewFile(folders));
+    setIsCreatingFile(false);
+    setNewItemName("");
+    setActiveDocument(newFile);
+    setContent(newFile.content);
   };
 
-  const handleExport = () => {
-    if (!activeDocument) return;
+  const handleCreateFolder = () => {
+    if (newItemName.trim() === "") return;
     
-    // Create a Blob with the document content
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>${activeDocument.title}</title>
-          <style>
-            body {
-              font-family: ${fontFamily};
-              color: ${textColor};
-              background-color: ${backgroundColor};
-              line-height: ${lineHeight};
-              text-align: ${textAlignment};
-              padding: 20px;
-              max-width: 800px;
-              margin: 0 auto;
+    const newFolder: DocumentFolder = {
+      id: Date.now().toString(),
+      name: newItemName,
+      files: []
+    };
+    
+    const updateFoldersWithNewFolder = (folderList: DocumentFolder[]): DocumentFolder[] => {
+      return folderList.map(folder => {
+        if (folder.id === currentFolderId) {
+          return {
+            ...folder,
+            folders: [...(folder.folders || []), newFolder]
+          };
+        }
+        
+        return {
+          ...folder,
+          folders: folder.folders ? updateFoldersWithNewFolder(folder.folders) : undefined
+        };
+      });
+    };
+    
+    setFolders(updateFoldersWithNewFolder(folders));
+    setIsCreatingFolder(false);
+    setNewItemName("");
+  };
+
+  const handleDeleteDocument = (documentId: string) => {
+    const updateFoldersRemoveDocument = (folderList: DocumentFolder[]): DocumentFolder[] => {
+      return folderList.map(folder => {
+        return {
+          ...folder,
+          files: folder.files.filter(file => file.id !== documentId),
+          folders: folder.folders ? updateFoldersRemoveDocument(folder.folders) : undefined
+        };
+      });
+    };
+    
+    setFolders(updateFoldersRemoveDocument(folders));
+    
+    if (activeDocument && activeDocument.id === documentId) {
+      let firstAvailableDoc: Document | null = null;
+      
+      const findFirstDoc = (folderList: DocumentFolder[]) => {
+        for (const folder of folderList) {
+          if (folder.files.length > 0) {
+            firstAvailableDoc = folder.files[0];
+            return;
+          }
+          if (folder.folders) findFirstDoc(folder.folders);
+        }
+      };
+      
+      findFirstDoc(folders);
+      setActiveDocument(firstAvailableDoc);
+      if (firstAvailableDoc) {
+        setContent(firstAvailableDoc.content);
+        setFontFamily(firstAvailableDoc.fontFamily);
+        setTextColor(firstAvailableDoc.textColor);
+        setBackgroundColor(firstAvailableDoc.backgroundColor);
+        setTextAlignment(firstAvailableDoc.textAlignment);
+      } else {
+        setContent("");
+      }
+    }
+  };
+
+  const handleDeleteFolder = (folderId: string) => {
+    const updateFoldersRemoveFolder = (folderList: DocumentFolder[]): DocumentFolder[] => {
+      return folderList
+        .filter(folder => folder.id !== folderId)
+        .map(folder => ({
+          ...folder,
+          folders: folder.folders ? updateFoldersRemoveFolder(folder.folders) : undefined
+        }));
+    };
+    
+    setFolders(updateFoldersRemoveFolder(folders));
+  };
+
+  const renderTreeItems = (folderList: DocumentFolder[]) => {
+    return folderList.map(folder => (
+      <TreeItem 
+        key={folder.id}
+        id={`folder-${folder.id}`}
+        icon={<Folder className="h-4 w-4" />}
+        label={folder.name}
+        actions={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Pencil className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                onClick={() => {
+                  setCurrentFolderId(folder.id);
+                  setIsCreatingFile(true);
+                }}
+              >
+                <FilePlus className="h-4 w-4 mr-2" />
+                Novo Documento
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => {
+                  setCurrentFolderId(folder.id);
+                  setIsCreatingFolder(true);
+                }}
+              >
+                <FolderPlus className="h-4 w-4 mr-2" />
+                Nova Pasta
+              </DropdownMenuItem>
+              {folder.id !== "1" && (
+                <DropdownMenuItem 
+                  className="text-red-600"
+                  onClick={() => handleDeleteFolder(folder.id)}
+                >
+                  <Trash className="h-4 w-4 mr-2" />
+                  Excluir Pasta
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      >
+        {folder.files.map(file => (
+          <TreeItem 
+            key={file.id}
+            id={`file-${file.id}`}
+            icon={<FileText className="h-4 w-4" />}
+            label={file.name}
+            onClick={() => {
+              setActiveDocument(file);
+              setContent(file.content);
+              setFontFamily(file.fontFamily);
+              setTextColor(file.textColor);
+              setBackgroundColor(file.backgroundColor);
+              setTextAlignment(file.textAlignment);
+              setTotalPages(file.pages || 1);
+              setCurrentPage(1);
+            }}
+            className={activeDocument?.id === file.id ? "bg-primary/10" : ""}
+            actions={
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={() => handleDeleteDocument(file.id)}
+              >
+                <Trash className="h-3 w-3 text-red-500" />
+              </Button>
             }
-          </style>
-        </head>
-        <body>
-          ${content}
-        </body>
-      </html>
-    `;
-    
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    
-    // Create download link
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${activeDocument.title}.html`;
-    document.body.appendChild(a);
-    a.click();
-    
-    // Clean up
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Documento exportado",
-      description: `${activeDocument.title} foi exportado como HTML.`
-    });
-  };
-
-  const selectDocument = (doc: Document) => {
-    setActiveDocument(doc);
+          />
+        ))}
+        {folder.folders && renderTreeItems(folder.folders)}
+      </TreeItem>
+    ));
   };
 
   return (
-    <div className="h-[calc(100vh-13rem)] bg-card/80 dark:bg-gray-800/40 backdrop-blur-md shadow-md border border-border/40 rounded-lg overflow-hidden flex flex-col">
-      {/* Top toolbar */}
-      <div className="flex items-center justify-between border-b p-2 bg-muted/30">
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setShowFileExplorer(!showFileExplorer)}
-          >
-            <Folder size={18} className="mr-1" />
-            {showFileExplorer ? "Ocultar arquivos" : "Mostrar arquivos"}
-          </Button>
-          
-          <div className="h-5 border-r border-gray-300 mx-1"></div>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleNewDocument}
-          >
-            <FileText size={18} className="mr-1" /> 
-            Novo
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleSave}
-          >
-            <Save size={18} className="mr-1" />
-            Salvar
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleExport}
-          >
-            <Download size={18} className="mr-1" />
-            Exportar
-          </Button>
-        </div>
-        
-        <div className="text-sm font-medium">
-          {activeDocument?.title || "Sem título"}
-        </div>
-      </div>
-      
-      {/* Main content area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* File explorer (left sidebar) */}
-        {showFileExplorer && (
-          <div className="w-64 border-r overflow-auto flex flex-col bg-muted/20">
-            <div className="p-3 border-b bg-muted/30 font-medium text-sm flex justify-between items-center">
-              <span>Documentos</span>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNewDocument}>
-                <FileText size={16} />
+    <div className="h-[calc(100vh-13rem)] flex">
+      {!fullscreenEdit && (
+        <div 
+          className={cn(
+            "flex-shrink-0 border-r transition-all duration-300 flex flex-col",
+            sidebarOpen ? "w-[240px]" : "w-0 overflow-hidden"
+          )}
+        >
+          <div className="flex items-center justify-between p-3 border-b">
+            <h2 className="font-medium text-sm">Documentos</h2>
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7"
+                onClick={() => {
+                  setCurrentFolderId("1");
+                  setIsCreatingFile(true);
+                }}
+              >
+                <FilePlus className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7"
+                onClick={() => {
+                  setCurrentFolderId("1");
+                  setIsCreatingFolder(true);
+                }}
+              >
+                <FolderPlus className="h-4 w-4" />
               </Button>
             </div>
-            <div className="overflow-auto flex-1">
-              {documents.map((doc) => (
-                <div 
-                  key={doc.id} 
-                  className={`p-2 border-b text-sm cursor-pointer hover:bg-muted/30 flex items-center ${
-                    activeDocument?.id === doc.id ? 'bg-muted/40 font-medium' : ''
-                  }`}
-                  onClick={() => selectDocument(doc)}
-                >
-                  <FileText size={14} className="mr-2 text-gray-500" />
-                  <div className="flex-1 overflow-hidden">
-                    <div className="truncate">{doc.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(doc.updatedAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
+
+          <div className="flex-1 overflow-auto p-2">
+            <Tree>
+              {renderTreeItems(folders)}
+            </Tree>
+            
+            {isCreatingFile && (
+              <div className="mt-2 p-2 bg-secondary/50 rounded-md">
+                <Input
+                  placeholder="Nome do documento"
+                  value={newItemName}
+                  onChange={(e) => setNewItemName(e.target.value)}
+                  className="mb-2 text-xs"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" onClick={() => {
+                    setIsCreatingFile(false);
+                    setNewItemName("");
+                  }}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={handleCreateFile}>
+                    Criar
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {isCreatingFolder && (
+              <div className="mt-2 p-2 bg-secondary/50 rounded-md">
+                <Input
+                  placeholder="Nome da pasta"
+                  value={newItemName}
+                  onChange={(e) => setNewItemName(e.target.value)}
+                  className="mb-2 text-xs"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" onClick={() => {
+                    setIsCreatingFolder(false);
+                    setNewItemName("");
+                  }}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={handleCreateFolder}>
+                    Criar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!fullscreenEdit && (
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute top-4 left-0 z-10 h-7 w-7 bg-card shadow-md rounded-r-md rounded-l-none border-l-0"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </Button>
+      )}
+
+      <div className={cn("flex-1 flex flex-col", fullscreenEdit ? "fixed inset-0 z-50 bg-background" : "")}>
+        <div className="border-b p-2 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            {fullscreenEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setFullscreenEdit(false)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            )}
+            <h3 className="font-medium text-sm">{activeDocument?.name || "Sem título"}</h3>
+            
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2 ml-4">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                >
+                  <ChevronLeft className="h-3 w-3" />
+                </Button>
+                <span className="text-xs">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                >
+                  <ChevronRight className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 flex items-center gap-1"
+              onClick={() => setFullscreenEdit(!fullscreenEdit)}
+            >
+              {fullscreenEdit ? "Sair da Tela Cheia" : "Tela Cheia"}
+            </Button>
+            
+            <Tabs 
+              value={view} 
+              onValueChange={(v) => setView(v as "edit" | "preview")}
+            >
+              <TabsList className="h-8">
+                <TabsTrigger value="edit" className="text-xs px-3">
+                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                  Editar
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="text-xs px-3">
+                  <Eye className="h-3.5 w-3.5 mr-1.5" />
+                  Visualizar
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </div>
+        
+        {view === "edit" && (
+          <>
+            <FormatToolbar 
+              fontFamily={fontFamily}
+              textColor={textColor}
+              backgroundColor={backgroundColor}
+              textAlignment={textAlignment}
+              onUpdateFormatting={handleUpdateFormatting}
+            />
+            <Separator />
+            <div className="flex-1 overflow-auto">
+              <Card className="m-4 shadow-sm h-[calc(100%-2rem)]">
+                <CardContent className="p-0">
+                  <EditorContent 
+                    content={content} 
+                    fontFamily={fontFamily}
+                    textColor={textColor}
+                    backgroundColor={backgroundColor}
+                    textAlignment={textAlignment}
+                    onUpdateContent={handleUpdateContent}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </>
         )}
         
-        {/* Editor */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Format toolbar */}
-          <FormatToolbar
-            fontFamily={fontFamily}
-            textColor={textColor}
-            backgroundColor={backgroundColor}
-            textAlignment={textAlignment}
-            lineHeight={lineHeight}
-            onUpdateFormatting={handleUpdateFormatting}
-          />
-          
-          {/* Editor/Preview tabs */}
-          <Tabs 
-            value={activeTab} 
-            onValueChange={(value) => setActiveTab(value as 'edit' | 'preview')}
-            className="flex-1 flex flex-col overflow-hidden"
-          >
-            <div className="border-b bg-muted/30">
-              <TabsList className="bg-transparent">
-                <TabsTrigger value="edit" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700">Editar</TabsTrigger>
-                <TabsTrigger value="preview" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700">Visualizar</TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <TabsContent value="edit" className="p-2 flex-1 overflow-hidden">
-              <EditorContent
-                content={content}
-                fontFamily={fontFamily}
-                textColor={textColor}
-                backgroundColor={backgroundColor}
-                textAlignment={textAlignment}
-                onUpdateContent={handleUpdateContent}
-              />
-            </TabsContent>
-            
-            <TabsContent value="preview" className="p-4 flex-1 overflow-auto">
-              <PreviewContent
-                content={content}
-                fontFamily={fontFamily}
-                textColor={textColor}
-                backgroundColor={backgroundColor}
-                textAlignment={textAlignment}
-                lineHeight={lineHeight}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
+        {view === "preview" && (
+          <div className="flex-1 overflow-auto">
+            <Card className="m-4 shadow-sm h-[calc(100%-2rem)]">
+              <CardContent className="p-4">
+                <PreviewContent 
+                  content={content}
+                  fontFamily={fontFamily}
+                  textColor={textColor}
+                  backgroundColor={backgroundColor}
+                  textAlignment={textAlignment}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

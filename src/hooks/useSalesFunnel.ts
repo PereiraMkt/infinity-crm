@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { KanbanCardItem, KanbanColumnItem } from "@/components/kanban/types";
 import { useToast } from "@/hooks/use-toast";
@@ -38,7 +39,6 @@ export function useSalesFunnel(initialColumns: KanbanColumnItem[]) {
       description,
       value: isNaN(value) ? 0 : value,
       priority,
-      completion: 0,
       tags: [
         { label: "Novo", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" }
       ],
@@ -148,6 +148,7 @@ export function useSalesFunnel(initialColumns: KanbanColumnItem[]) {
     });
   };
 
+  // Prepare data for analytics charts
   const funnelStageData = columns.map(column => ({
     name: column.title,
     value: column.cards.length

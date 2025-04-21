@@ -21,7 +21,7 @@ export const getPriorityColor = (priority?: string) => {
   }
 };
 
-export const calculateCompletionPercentage = (checklist: Array<{id: string, text?: string, description?: string, completed: boolean, estimated?: number}>, defaultCompletion?: number) => {
+export const calculateCompletionPercentage = (checklist: ChecklistItem[], defaultCompletion?: number) => {
   return checklist.length > 0 
     ? Math.round((checklist.filter(item => item.completed).length / checklist.length) * 100) 
     : defaultCompletion || 0;
