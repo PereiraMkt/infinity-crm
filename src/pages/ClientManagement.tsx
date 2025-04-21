@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -614,6 +613,7 @@ const ClientManagement = () => {
           </Card>
         </TabsContent>
         
+        
         <TabsContent value="related" className="mt-0 space-y-6">
           {selectedClient ? (
             <div className="space-y-6">
@@ -822,13 +822,3 @@ const ClientManagement = () => {
                     <span className="font-medium">6.8 horas</span>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-};
-
-export default ClientManagement;
