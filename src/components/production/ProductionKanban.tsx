@@ -17,7 +17,7 @@ const ProductionKanban = ({ columns, setColumns }: ProductionKanbanProps) => {
     }, 50);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [columns, setColumns]);
   
   return (
     <div className="relative">

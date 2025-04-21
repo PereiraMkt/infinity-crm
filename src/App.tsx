@@ -14,28 +14,97 @@ import { useThemeManager } from '@/hooks/useThemeManager';
 // Import custom animations
 import '@/styles/animations.css';
 
-// Lazy-loaded components with proper promise handling
-const Dashboard = lazy(() => import('@/pages/Dashboard').catch(() => {
-  console.error('Failed to load Dashboard component');
-  return { default: () => <div>Error loading Dashboard</div> };
-}));
+// Lazy-loaded components with proper error handling
+// Use a consistent pattern that will return a proper default export
+const Dashboard = lazy(() => 
+  import('@/pages/Dashboard')
+    .then(module => ({ default: module.default }))
+    .catch(() => {
+      console.error('Failed to load Dashboard component');
+      return { default: () => <div>Error loading Dashboard</div> };
+    })
+);
 
-const SalesFunnel = lazy(() => import('@/pages/SalesFunnel'));
-const ClientManagement = lazy(() => import('@/pages/ClientManagement'));
-const FinanceManagement = lazy(() => import('@/pages/FinanceManagement'));
-const ProductsServices = lazy(() => import('@/pages/ProductsServices'));
-const LeadImport = lazy(() => import('@/pages/LeadImport'));
-const ProductionManagement = lazy(() => import('@/pages/ProductionManagement'));
-const TeamManagement = lazy(() => import('@/pages/TeamManagement'));
-const Meetings = lazy(() => import('@/pages/Meetings'));
-const Settings = lazy(() => import('@/pages/Settings'));
-const UserSettings = lazy(() => import('@/pages/UserSettings'));
-const WhatsAppIntegration = lazy(() => import('@/pages/WhatsAppIntegration'));
-const AdsIntegrationPage = lazy(() => import('@/pages/AdsIntegrationPage'));
-const Index = lazy(() => import('@/pages/Index'));
-const Login = lazy(() => import('@/pages/Login'));
-const Register = lazy(() => import('@/pages/Register'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
+// Apply the same pattern to all lazy-loaded components
+const SalesFunnel = lazy(() => 
+  import('@/pages/SalesFunnel')
+    .then(module => ({ default: module.default }))
+);
+
+const ClientManagement = lazy(() => 
+  import('@/pages/ClientManagement')
+    .then(module => ({ default: module.default }))
+);
+
+const FinanceManagement = lazy(() => 
+  import('@/pages/FinanceManagement')
+    .then(module => ({ default: module.default }))
+);
+
+const ProductsServices = lazy(() => 
+  import('@/pages/ProductsServices')
+    .then(module => ({ default: module.default }))
+);
+
+const LeadImport = lazy(() => 
+  import('@/pages/LeadImport')
+    .then(module => ({ default: module.default }))
+);
+
+const ProductionManagement = lazy(() => 
+  import('@/pages/ProductionManagement')
+    .then(module => ({ default: module.default }))
+);
+
+const TeamManagement = lazy(() => 
+  import('@/pages/TeamManagement')
+    .then(module => ({ default: module.default }))
+);
+
+const Meetings = lazy(() => 
+  import('@/pages/Meetings')
+    .then(module => ({ default: module.default }))
+);
+
+const Settings = lazy(() => 
+  import('@/pages/Settings')
+    .then(module => ({ default: module.default }))
+);
+
+const UserSettings = lazy(() => 
+  import('@/pages/UserSettings')
+    .then(module => ({ default: module.default }))
+);
+
+const WhatsAppIntegration = lazy(() => 
+  import('@/pages/WhatsAppIntegration')
+    .then(module => ({ default: module.default }))
+);
+
+const AdsIntegrationPage = lazy(() => 
+  import('@/pages/AdsIntegrationPage')
+    .then(module => ({ default: module.default }))
+);
+
+const Index = lazy(() => 
+  import('@/pages/Index')
+    .then(module => ({ default: module.default }))
+);
+
+const Login = lazy(() => 
+  import('@/pages/Login')
+    .then(module => ({ default: module.default }))
+);
+
+const Register = lazy(() => 
+  import('@/pages/Register')
+    .then(module => ({ default: module.default }))
+);
+
+const NotFound = lazy(() => 
+  import('@/pages/NotFound')
+    .then(module => ({ default: module.default }))
+);
 
 // Configure query client with better caching and retry logic
 const queryClient = new QueryClient({

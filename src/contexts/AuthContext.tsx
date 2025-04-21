@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session, AuthError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             // Use setTimeout to prevent deadlocks with Supabase auth
             setTimeout(async () => {
-              const hydrationResult = await hydrateUser(session.user.id);
+              const hydrationResult = await hydrateUser();
               setState({
                 user: session.user,
                 session,
@@ -84,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             // Use setTimeout to prevent deadlocks with Supabase auth
             setTimeout(async () => {
-              const hydrationResult = await hydrateUser(session.user.id);
+              const hydrationResult = await hydrateUser();
               setState({
                 user: session.user,
                 session,
@@ -126,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { user, session } = await loginUser(email, password);
       
       if (user) {
-        const hydrationResult = await hydrateUser(user.id);
+        const hydrationResult = await hydrateUser();
         setState({
           user,
           session,

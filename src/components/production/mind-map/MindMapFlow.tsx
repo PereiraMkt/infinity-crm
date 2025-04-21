@@ -187,18 +187,20 @@ function MindMapFlow() {
     });
   };
 
-  // Fixed viewport handling
+  // Fixed viewport handling - updated to use correct types
   const handleZoomIn = () => {
-    setViewport((viewport: Viewport) => ({
-      ...viewport,
-      zoom: viewport.zoom * 1.1, // Increase zoom level
+    setViewport((currentViewport: Viewport) => ({
+      zoom: currentViewport.zoom * 1.1,
+      x: currentViewport.x,
+      y: currentViewport.y
     }));
   };
 
   const handleZoomOut = () => {
-    setViewport((viewport: Viewport) => ({
-      ...viewport,
-      zoom: viewport.zoom * 0.9, // Decrease zoom level
+    setViewport((currentViewport: Viewport) => ({
+      zoom: currentViewport.zoom * 0.9,
+      x: currentViewport.x,
+      y: currentViewport.y
     }));
   };
 
