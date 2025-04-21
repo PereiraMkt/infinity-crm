@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { File, Folder, ChevronDown, ChevronRight, Plus, MoreHorizontal } from "lucide-react";
+import { File, Folder, ChevronDown, ChevronRight, Plus, MoreHorizontal, Trash, Edit, Download, Pencil } from "lucide-react";
 import { Tree, TreeItem } from "@/components/ui/tree";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,9 +9,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import NewItemDialog from "./NewItemDialog";
+import { useToast } from "@/hooks/use-toast";
 
 export interface DocumentItem {
   id: string;
@@ -79,7 +81,11 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
   const [newItemDialogOpen, setNewItemDialogOpen] = useState(false);
   const [newItemParentId, setNewItemParentId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingItem, setEditingItem] = useState<{ id: string, name: string } | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   
+  const { toast } = useToast();
+
   const handleAddItem = (parentId: string | null) => {
     setNewItemParentId(parentId);
     setNewItemDialogOpen(true);
@@ -94,18 +100,27 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
       children: type === "folder" ? [] : undefined,
     };
     
-    if (newItemParentId === null) {
+    // If a selected folder exists and no specific parent was selected for the new item,
+    // add to the selected folder instead of root
+    const effectiveParentId = newItemParentId === null && selectedFolder ? selectedFolder : newItemParentId;
+    
+    if (effectiveParentId === null) {
       // Add to root
       setDocuments([...documents, newItem]);
     } else {
       // Add to specific folder
-      const updatedDocs = addItemToFolder(documents, newItemParentId, newItem);
+      const updatedDocs = addItemToFolder(documents, effectiveParentId, newItem);
       setDocuments(updatedDocs);
     }
     
     if (type === "file") {
       onSelectFile(newItem);
     }
+    
+    toast({
+      title: `${type === "file" ? "Documento" : "Pasta"} criado(a)`,
+      description: `${name} foi criado(a) com sucesso.`
+    });
   };
   
   const addItemToFolder = (items: DocumentItem[], folderId: string, newItem: DocumentItem): DocumentItem[] => {
@@ -133,6 +148,16 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
     if (selectedFile && selectedFile.id === itemId) {
       onSelectFile(null);
     }
+    
+    // If deleted item was the selected folder, clear that too
+    if (selectedFolder === itemId) {
+      setSelectedFolder(null);
+    }
+    
+    toast({
+      title: "Item excluído",
+      description: "O item foi excluído com sucesso."
+    });
   };
   
   const deleteItem = (items: DocumentItem[], itemId: string): DocumentItem[] => {
@@ -148,6 +173,67 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
       return true;
     });
   };
+  
+  const startRenaming = (item: DocumentItem) => {
+    setEditingItem({ id: item.id, name: item.name });
+  };
+  
+  const handleRename = (itemId: string, newName: string) => {
+    if (!newName.trim()) {
+      setEditingItem(null);
+      return;
+    }
+    
+    const updatedDocs = renameItem(documents, itemId, newName);
+    setDocuments(updatedDocs);
+    setEditingItem(null);
+    
+    toast({
+      title: "Item renomeado",
+      description: `Nome alterado para '${newName}'.`
+    });
+  };
+  
+  const renameItem = (items: DocumentItem[], itemId: string, newName: string): DocumentItem[] => {
+    return items.map(item => {
+      if (item.id === itemId) {
+        return {
+          ...item,
+          name: newName,
+        };
+      }
+      
+      if (item.children) {
+        return {
+          ...item,
+          children: renameItem(item.children, itemId, newName),
+        };
+      }
+      
+      return item;
+    });
+  };
+
+  const handleExportDocument = (item: DocumentItem) => {
+    if (item.type === "file" && item.content) {
+      const element = document.createElement("a");
+      const file = new Blob([item.content], {type: 'text/markdown'});
+      element.href = URL.createObjectURL(file);
+      element.download = `${item.name}.md`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      
+      toast({
+        title: "Documento exportado",
+        description: `${item.name} foi exportado com sucesso.`
+      });
+    }
+  };
+  
+  const handleFolderClick = (folderId: string) => {
+    setSelectedFolder(selectedFolder === folderId ? null : folderId);
+  };
 
   const renderItems = (items: DocumentItem[], level = 0) => {
     if (!items || items.length === 0) return null;
@@ -162,53 +248,105 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
       items;
 
     return filteredItems.map((item) => {
+      const isEditing = editingItem?.id === item.id;
+      const isSelected = selectedFile?.id === item.id || selectedFolder === item.id;
+      
       if (item.type === "folder") {
         return (
           <TreeItem 
             key={item.id}
-            icon={<Folder className="h-4 w-4 text-muted-foreground" />}
-            label={item.name}
+            icon={<Folder className={cn("h-4 w-4", selectedFolder === item.id ? "text-primary" : "text-muted-foreground")} />}
+            label={isEditing ? (
+              <Input
+                size={1}
+                className="h-6 py-1 text-xs"
+                defaultValue={editingItem.name}
+                autoFocus
+                onBlur={(e) => handleRename(item.id, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleRename(item.id, e.currentTarget.value);
+                  } else if (e.key === 'Escape') {
+                    setEditingItem(null);
+                  }
+                }}
+              />
+            ) : (
+              <span 
+                className={cn(
+                  "cursor-pointer flex-1",
+                  selectedFolder === item.id && "font-semibold text-primary"
+                )}
+                onClick={() => handleFolderClick(item.id)}
+              >
+                {item.name}
+              </span>
+            )}
             actions={
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
                     <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">Actions</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuItem onClick={() => handleAddItem(item.id)}>
-                    Add Item
+                    <Plus className="mr-2 h-4 w-4" /> Adicionar Item
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleDeleteItem(item.id)}>
-                    Delete
+                  <DropdownMenuItem onClick={() => startRenaming(item)}>
+                    <Edit className="mr-2 h-4 w-4" /> Renomear
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleDeleteItem(item.id)} className="text-destructive focus:text-destructive">
+                    <Trash className="mr-2 h-4 w-4" /> Excluir
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             }
           >
-            {item.children && renderItems(item.children, level + 1)}
+            {selectedFolder === item.id && item.children && renderItems(item.children, level + 1)}
           </TreeItem>
         );
       } else {
         return (
           <TreeItem
             key={item.id}
-            icon={<File className="h-4 w-4 text-muted-foreground" />}
-            label={item.name}
+            icon={<File className={cn("h-4 w-4", isSelected ? "text-primary" : "text-muted-foreground")} />}
+            label={isEditing ? (
+              <Input
+                size={1}
+                className="h-6 py-1 text-xs"
+                defaultValue={editingItem.name}
+                autoFocus
+                onBlur={(e) => handleRename(item.id, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleRename(item.id, e.currentTarget.value);
+                  } else if (e.key === 'Escape') {
+                    setEditingItem(null);
+                  }
+                }}
+              />
+            ) : item.name}
             onClick={() => onSelectFile(item)}
-            className={cn(selectedFile?.id === item.id && "bg-primary/10")}
+            className={cn(isSelected && "bg-primary/10")}
             actions={
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">
                     <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">Actions</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem onClick={() => handleDeleteItem(item.id)}>
-                    Delete
+                  <DropdownMenuItem onClick={() => startRenaming(item)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Renomear
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExportDocument(item)}>
+                    <Download className="mr-2 h-4 w-4" /> Exportar
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleDeleteItem(item.id)} className="text-destructive focus:text-destructive">
+                    <Trash className="mr-2 h-4 w-4" /> Excluir
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -224,7 +362,7 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-semibold">Documentos</h3>
-          <Button variant="ghost" size="sm" onClick={() => handleAddItem(null)}>
+          <Button variant="ghost" size="sm" onClick={() => handleAddItem(selectedFolder)}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>

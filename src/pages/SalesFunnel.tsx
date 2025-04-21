@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { FunnelHeader } from "@/components/sales-funnel/FunnelHeader";
 import { FunnelAnalytics } from "@/components/sales-funnel/FunnelAnalytics";
@@ -6,8 +5,6 @@ import { NewLeadDialog } from "@/components/sales-funnel/NewLeadDialog";
 import { EditLeadDialog } from "@/components/sales-funnel/EditLeadDialog";
 import { SalesFunnelBoard } from "@/components/sales-funnel/SalesFunnelBoard";
 import { useSalesFunnel } from "@/hooks/useSalesFunnel";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { KanbanColumnItem } from "@/components/kanban/types";
 
 const SalesFunnel = () => {

@@ -1,18 +1,22 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import FormatToolbar from './FormatToolbar';
 import EditorContent from './EditorContent';
 import PreviewContent from './PreviewContent';
+import { ChevronsUp, Eye, EyeOff, Copy } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface DocumentContentProps {
   initialContent?: string;
   onContentChange?: (content: string) => void;
+  documentTitle?: string;
 }
 
 const DocumentContent: React.FC<DocumentContentProps> = ({ 
   initialContent = "# Start writing your document here",
-  onContentChange
+  onContentChange,
+  documentTitle = "Untitled Document"
 }) => {
   const [content, setContent] = useState<string>(initialContent);
   const [fontFamily, setFontFamily] = useState<string>('"Inter", sans-serif');
@@ -21,7 +25,8 @@ const DocumentContent: React.FC<DocumentContentProps> = ({
   const [textAlignment, setTextAlignment] = useState<string>("left");
   const [lineHeight, setLineHeight] = useState<string>("1.5");
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
-  const [documentTitle, setDocumentTitle] = useState<string>("Pipeline de Prospecção BDR/SDR - Infinity");
+  const [showCover, setShowCover] = useState<boolean>(true);
+  const [coverImage, setCoverImage] = useState<string>("/placeholder.svg");
   
   const contentRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -36,28 +41,6 @@ const DocumentContent: React.FC<DocumentContentProps> = ({
     setContent(newContent);
   };
 
-  const handleUpdateFormatting = (property: string, value: string) => {
-    switch (property) {
-      case 'fontFamily':
-        setFontFamily(value);
-        break;
-      case 'textColor':
-        setTextColor(value);
-        break;
-      case 'backgroundColor':
-        setBackgroundColor(value);
-        break;
-      case 'textAlignment':
-        setTextAlignment(value);
-        break;
-      case 'lineHeight':
-        setLineHeight(value);
-        break;
-      default:
-        break;
-    }
-  };
-
   const handleTogglePreview = () => {
     setIsPreviewMode(!isPreviewMode);
   };
@@ -70,31 +53,75 @@ const DocumentContent: React.FC<DocumentContentProps> = ({
     });
   };
 
+  const handleToggleCover = () => {
+    setShowCover(!showCover);
+  };
+
   return (
     <div className="flex flex-col h-full border rounded-md overflow-hidden bg-[#1A1F2C] dark:bg-[#1A1F2C]">
-      <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gray-800 dark:bg-gray-800">
-        <input
-          type="text"
-          value={documentTitle}
-          onChange={(e) => setDocumentTitle(e.target.value)}
-          className="bg-transparent border-none font-medium text-lg focus:outline-none focus:ring-0 w-full text-white"
-        />
-        <div className="flex items-center gap-2">
-          <FormatToolbar
-            fontFamily={fontFamily}
-            textColor={textColor}
-            backgroundColor={backgroundColor}
-            textAlignment={textAlignment}
-            lineHeight={lineHeight}
-            onUpdateFormatting={handleUpdateFormatting}
-            isPreviewMode={isPreviewMode}
-            onTogglePreview={handleTogglePreview}
-            onCopy={handleCopy}
+      {showCover && (
+        <div 
+          className="relative w-full h-48 bg-cover bg-center flex items-end p-6"
+          style={{ backgroundImage: `url(${coverImage})` }}
+        >
+          <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+          <input
+            type="text"
+            defaultValue={documentTitle}
+            className="relative z-10 bg-transparent border-none font-bold text-2xl focus:outline-none focus:ring-0 w-full text-white"
+            placeholder="Untitled Document"
           />
+          <div className="absolute top-4 right-4 z-10 flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-black/50 text-white border-white/20 hover:bg-black/70"
+              onClick={handleToggleCover}
+            >
+              <ChevronsUp className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+      )}
+
+      <div className={cn("flex items-center justify-end p-2 gap-2", !showCover && "border-b border-gray-700")}>
+        {!showCover && (
+          <input
+            type="text"
+            defaultValue={documentTitle}
+            className="flex-1 bg-transparent border-none font-medium text-lg focus:outline-none focus:ring-0 text-white"
+            placeholder="Untitled Document"
+          />
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-white/70 hover:text-white"
+          onClick={handleCopy}
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-white/70 hover:text-white"
+          onClick={handleTogglePreview}
+        >
+          {isPreviewMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </Button>
+        {!showCover && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:text-white"
+            onClick={handleToggleCover}
+          >
+            <ChevronsUp className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      <div className="flex-grow relative overflow-hidden" style={{ height: 'calc(842px - 140px)' }}>
+      <div className="flex-grow relative overflow-hidden" style={{ height: showCover ? 'calc(842px - 240px)' : 'calc(842px - 140px)' }}>
         {isPreviewMode ? (
           <PreviewContent
             content={content}

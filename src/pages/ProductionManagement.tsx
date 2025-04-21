@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import ProductionTabs from "@/components/production/ProductionTabs";
-import { KanbanColumnItem } from "@/components/kanban/types";
+import { KanbanColumnItem, KanbanCardItem } from "@/components/kanban/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Filter, Download, Plus, RefreshCw } from "lucide-react";
@@ -173,14 +173,14 @@ const ProductionManagement = () => {
     
     const assignedUser = users.find(user => user.id === newTask.assignee) || users[0];
     
-    // Ensure the new task conforms to the KanbanCardItem type
-    const newTaskItem = {
+    // Create a properly typed KanbanCardItem
+    const newTaskItem: KanbanCardItem = {
       id: `task-${Date.now()}`,
       title: newTask.title,
       description: newTask.description,
       client: newTask.client,
       assignedTo: assignedUser,
-      priority: newTask.priority as "low" | "medium" | "high", // Explicit type casting
+      priority: newTask.priority,
       completion: 0
     };
     
@@ -209,7 +209,7 @@ const ProductionManagement = () => {
     
     toast({
       title: "Tarefa criada",
-      description: "A tarefa foi adicionada ao backlog"
+      description: "A tarefa foi adicionada ao backlog e ao gráfico Gantt"
     });
   };
 

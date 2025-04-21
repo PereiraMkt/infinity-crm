@@ -39,6 +39,29 @@ const MainLayout = () => {
       setSidebarOpen(false);
     }
   }, [location.pathname, isMobileView]);
+  
+  // Close sidebar if user clicks outside of it
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      // Only apply this on mobile
+      if (isMobileView && sidebarOpen) {
+        const sidebar = document.getElementById('main-sidebar');
+        const toggleButton = document.getElementById('sidebar-toggle');
+        
+        if (sidebar && 
+            !sidebar.contains(e.target as Node) && 
+            toggleButton && 
+            !toggleButton.contains(e.target as Node)) {
+          setSidebarOpen(false);
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isMobileView, sidebarOpen]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
@@ -51,10 +74,12 @@ const MainLayout = () => {
     <SidebarProvider>
       <div className="min-h-screen flex dark:bg-gray-900 bg-gray-50 transition-colors duration-300 w-full">
         {/* Sidebar - Responsive */}
-        <Sidebar 
-          open={sidebarOpen} 
-          setOpen={setSidebarOpen} 
-        />
+        <div id="main-sidebar">
+          <Sidebar 
+            open={sidebarOpen} 
+            setOpen={setSidebarOpen} 
+          />
+        </div>
 
         {/* Main content area */}
         <div className="flex flex-col flex-1 w-full overflow-hidden">
