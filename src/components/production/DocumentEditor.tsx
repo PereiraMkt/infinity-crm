@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,7 +9,7 @@ import {
   ListOrdered, Image, FileText, Save, Download, Share, Plus, 
   Heading1, Heading2, Heading3, Underline, Link, Code, 
   FileSpreadsheet, FilePlus, FolderPlus, Folder, Table, Trash,
-  Paintbrush, Type, Clipboard, Scissors, Play, Undo, Redo, Copy
+  Paintbucket, Type, Clipboard, Scissors, Play, Undo, Redo, Copy
 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -469,7 +468,7 @@ const DocumentEditor = () => {
             onChange={(e) => setBackgroundColor(e.target.value)}
             className="h-6 w-6 cursor-pointer border rounded p-0 m-0"
           />
-          <PaintBucket size={16} className="ml-1" />
+          <Paintbucket size={16} className="ml-1" />
         </div>
 
         <div className="flex items-center gap-1 ml-2">
@@ -503,7 +502,7 @@ const DocumentEditor = () => {
             className="h-8 w-8"
             onClick={() => document.execCommand('cut')}
           >
-            <Cut size={16} />
+            <Scissors size={16} />
           </Button>
           <Button 
             variant="ghost" 
@@ -511,7 +510,7 @@ const DocumentEditor = () => {
             className="h-8 w-8"
             onClick={() => document.execCommand('paste')}
           >
-            <Paste size={16} />
+            <Clipboard size={16} />
           </Button>
         </div>
 
