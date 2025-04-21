@@ -1,9 +1,8 @@
 
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ZoomIn, ZoomOut } from "lucide-react";
-import { Viewport, useReactFlow } from "reactflow";
+import { RefreshCw, ZoomIn, ZoomOut, Plus } from "lucide-react";
 
-interface MindMapControlsProps {
+export interface MindMapControlsProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onFitView: () => void;

@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from "react";
-import { useLocation, useParams, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import UserMenu from "@/components/auth/UserMenu";
+import { UserMenu } from "@/components/auth/UserMenu";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
 

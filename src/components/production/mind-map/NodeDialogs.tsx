@@ -1,84 +1,71 @@
 
 import { Node, Edge } from "reactflow";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import NodeDialog from "./NodeDialog";
+import EdgeDialog from "./EdgeDialog";
 
-interface NodeDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+interface NodeDialogsProps {
   selectedNode: Node | null;
-  onDelete: () => void;
+  selectedEdge: Edge | null;
+  isNodeDialogOpen: boolean;
+  isEdgeDialogOpen: boolean;
+  setIsNodeDialogOpen: (open: boolean) => void;
+  setIsEdgeDialogOpen: (open: boolean) => void;
+  setNodes: (updater: any) => void;
+  setEdges: (updater: any) => void;
 }
 
-export const NodeDialog = ({ isOpen, onOpenChange, selectedNode, onDelete }: NodeDialogProps) => {
-  return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Editar Nó</DialogTitle>
-          <DialogDescription>
-            {selectedNode?.data?.label || "Nó sem título"}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Deseja excluir este nó do seu mapa mental?
-          </p>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button variant="destructive" onClick={onDelete}>
-            Excluir
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-interface EdgeDialogProps {
-  isOpen: boolean;
-  edge: Edge | null;
-  onClose: () => void;
-  onUpdate: (source: string, target: string) => void;
-  onDelete: () => void;
-}
-
-export const EdgeDialog = ({ isOpen, edge, onClose, onUpdate, onDelete }: EdgeDialogProps) => {
-  if (!isOpen || !edge) return null;
+const NodeDialogs = ({
+  selectedNode,
+  selectedEdge,
+  isNodeDialogOpen,
+  isEdgeDialogOpen,
+  setIsNodeDialogOpen,
+  setIsEdgeDialogOpen,
+  setNodes,
+  setEdges
+}: NodeDialogsProps) => {
   
+  const handleDeleteNode = () => {
+    if (selectedNode) {
+      setNodes((nodes: Node[]) => nodes.filter((node) => node.id !== selectedNode.id));
+      setIsNodeDialogOpen(false);
+    }
+  };
+
+  const handleDeleteEdge = () => {
+    if (selectedEdge) {
+      setEdges((edges: Edge[]) => edges.filter((edge) => edge.id !== selectedEdge.id));
+      setIsEdgeDialogOpen(false);
+    }
+  };
+
+  const handleUpdateEdge = (source: string, target: string) => {
+    if (selectedEdge) {
+      setEdges((edges: Edge[]) => edges.map((edge) => 
+        edge.id === selectedEdge.id ? { ...edge, source, target } : edge
+      ));
+      setIsEdgeDialogOpen(false);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Editar Conexão</DialogTitle>
-          <DialogDescription>
-            Conexão de {edge.source} para {edge.target}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Você pode excluir esta conexão do mapa mental.
-          </p>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button variant="destructive" onClick={onDelete}>
-            Excluir
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <>
+      <NodeDialog
+        isOpen={isNodeDialogOpen}
+        onOpenChange={setIsNodeDialogOpen}
+        selectedNode={selectedNode}
+        onDelete={handleDeleteNode}
+      />
+      
+      <EdgeDialog
+        isOpen={isEdgeDialogOpen}
+        edge={selectedEdge}
+        onClose={() => setIsEdgeDialogOpen(false)}
+        onUpdate={handleUpdateEdge}
+        onDelete={handleDeleteEdge}
+      />
+    </>
   );
 };
+
+export default NodeDialogs;

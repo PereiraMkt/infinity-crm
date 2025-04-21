@@ -11,13 +11,15 @@ import ReactFlow, {
   Edge,
   Connection,
   MarkerType,
+  useReactFlow,
 } from "reactflow";
 import CustomNode from "./CustomNode";
 import MindMapControls from "./MindMapControls";
-import NodeTemplates from "./NodeTemplates";
-import NodeDialogs from "./NodeDialogs";
+import NodeTemplates, { useNodeTemplates } from "./NodeTemplates";
 import { initialNodes, initialEdges } from "./constants";
 import SidebarPanel from "./SidebarPanel";
+import NodeDialog from "./NodeDialog";
+import EdgeDialog from "./EdgeDialog";
 
 const nodeTypes = {
   custom: CustomNode,
@@ -31,6 +33,10 @@ const MindMapFlow = () => {
   const [isNodeDialogOpen, setIsNodeDialogOpen] = useState(false);
   const [isEdgeDialogOpen, setIsEdgeDialogOpen] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [nodeName, setNodeName] = useState("");
+  const { templates, createTemplateNode } = useNodeTemplates();
+  const reactFlowInstance = useReactFlow();
 
   const onConnect = useCallback((params: Connection) => {
     const newEdge = {
@@ -75,8 +81,68 @@ const MindMapFlow = () => {
     setShowTemplates(false);
   };
 
+  const handleDeleteNode = () => {
+    if (selectedNode) {
+      setNodes(nodes.filter((node) => node.id !== selectedNode.id));
+      setIsNodeDialogOpen(false);
+    }
+  };
+
+  const handleDeleteEdge = () => {
+    if (selectedEdge) {
+      setEdges(edges.filter((edge) => edge.id !== selectedEdge.id));
+      setIsEdgeDialogOpen(false);
+    }
+  };
+
+  const handleUpdateEdge = (source: string, target: string) => {
+    if (selectedEdge) {
+      setEdges(edges.map((edge) => 
+        edge.id === selectedEdge.id ? { ...edge, source, target } : edge
+      ));
+      setIsEdgeDialogOpen(false);
+    }
+  };
+
+  const handleZoomIn = () => {
+    reactFlowInstance.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    reactFlowInstance.zoomOut();
+  };
+
+  const handleFitView = () => {
+    reactFlowInstance.fitView();
+  };
+
+  const handleAddTemplateNode = (template: any) => {
+    const newNode = createTemplateNode(template, {});
+    setNodes([...nodes, newNode]);
+  };
+
   return (
     <div className="w-full h-full flex" style={{ height: '842px' }}> {/* A4 height */}
+      <SidebarPanel
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        nodeName={nodeName}
+        setNodeName={setNodeName}
+        onAddNode={() => {
+          if (nodeName.trim()) {
+            const newNode = {
+              id: `node-${Date.now()}`,
+              type: 'custom',
+              position: { x: 100, y: 100 },
+              data: { label: nodeName },
+            };
+            setNodes([...nodes, newNode]);
+            setNodeName("");
+          }
+        }}
+        templates={templates}
+        onAddTemplate={handleAddTemplateNode}
+      />
       <div className="w-full h-full relative">
         <ReactFlow
           nodes={nodes}
@@ -94,21 +160,32 @@ const MindMapFlow = () => {
         >
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
           <Controls />
-          <MindMapControls onAddNode={() => setShowTemplates(!showTemplates)} />
+          <MindMapControls 
+            onZoomIn={handleZoomIn} 
+            onZoomOut={handleZoomOut} 
+            onFitView={handleFitView} 
+          />
           {showTemplates && (
-            <NodeTemplates onSelectTemplate={handleAddNode} />
+            <NodeTemplates 
+              templates={templates} 
+              onAddTemplate={handleAddTemplateNode} 
+            />
           )}
         </ReactFlow>
         
-        <NodeDialogs
+        <NodeDialog
+          isOpen={isNodeDialogOpen}
+          onOpenChange={setIsNodeDialogOpen}
           selectedNode={selectedNode}
-          selectedEdge={selectedEdge}
-          isNodeDialogOpen={isNodeDialogOpen}
-          isEdgeDialogOpen={isEdgeDialogOpen}
-          setIsNodeDialogOpen={setIsNodeDialogOpen}
-          setIsEdgeDialogOpen={setIsEdgeDialogOpen}
-          setNodes={setNodes}
-          setEdges={setEdges}
+          onDelete={handleDeleteNode}
+        />
+        
+        <EdgeDialog
+          isOpen={isEdgeDialogOpen}
+          edge={selectedEdge}
+          onClose={() => setIsEdgeDialogOpen(false)}
+          onUpdate={handleUpdateEdge}
+          onDelete={handleDeleteEdge}
         />
       </div>
     </div>
