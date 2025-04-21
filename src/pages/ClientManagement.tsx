@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -822,3 +823,241 @@ const ClientManagement = () => {
                     <span className="font-medium">6.8 horas</span>
                   </div>
                 </div>
+                <div>
+                  <p className="font-medium mb-2">Conversão de Leads</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-muted-foreground">Mês atual</span>
+                    <span className="font-medium">23.5%</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-muted-foreground">Mês anterior</span>
+                    <span className="font-medium">21.2%</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Dialog para adicionar novo cliente */}
+      <Dialog open={newClientDialogOpen} onOpenChange={setNewClientDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar Novo Cliente</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do novo cliente. Campos com * são obrigatórios.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleAddClient}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label htmlFor="name" className="text-right">
+                    Nome / Empresa *
+                  </Label>
+                  <Input
+                    id="name"
+                    value={newClient.name}
+                    onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact" className="text-right">
+                    Contato
+                  </Label>
+                  <Input
+                    id="contact"
+                    value={newClient.contact || ""}
+                    onChange={(e) => setNewClient({...newClient, contact: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="segment" className="text-right">
+                    Segmento
+                  </Label>
+                  <Input
+                    id="segment"
+                    value={newClient.segment || ""}
+                    onChange={(e) => setNewClient({...newClient, segment: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email" className="text-right">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newClient.email || ""}
+                    onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone" className="text-right">
+                    Telefone
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={newClient.phone || ""}
+                    onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="status" className="text-right">
+                    Status
+                  </Label>
+                  <Select
+                    value={newClient.status}
+                    onValueChange={(value) => setNewClient({...newClient, status: value})}
+                  >
+                    <SelectTrigger id="status" className="mt-1">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ativo">Ativo</SelectItem>
+                      <SelectItem value="Inativo">Inativo</SelectItem>
+                      <SelectItem value="Prospect">Prospect</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="city" className="text-right">
+                    Cidade
+                  </Label>
+                  <Input
+                    id="city"
+                    value={newClient.city || ""}
+                    onChange={(e) => setNewClient({...newClient, city: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state" className="text-right">
+                    Estado
+                  </Label>
+                  <Input
+                    id="state"
+                    value={newClient.state || ""}
+                    onChange={(e) => setNewClient({...newClient, state: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancelar</Button>
+              </DialogClose>
+              <Button type="submit">Adicionar Cliente</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog para adicionar etiqueta */}
+      <Dialog open={clientTagDialogOpen} onOpenChange={setClientTagDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar Etiqueta</DialogTitle>
+            <DialogDescription>
+              {selectedClient && `Adicione etiquetas ao cliente "${selectedClient.name}"`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-wrap gap-2 mb-2">
+              <p className="text-sm font-medium mb-1">Etiquetas atuais:</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedClient && getTagsForClient(selectedClient.id).map(tag => (
+                  <Badge key={tag.id} className={`${tag.color} text-white flex items-center gap-1`}>
+                    {tag.name}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-4 w-4 p-0 hover:bg-transparent"
+                      onClick={() => selectedClient && handleRemoveTagFromClient(selectedClient.id, tag.id)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+                {selectedClient && getTagsForClient(selectedClient.id).length === 0 && (
+                  <span className="text-sm text-muted-foreground">Nenhuma etiqueta</span>
+                )}
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="tags" className="text-right mb-2 block">
+                Adicionar etiqueta
+              </Label>
+              <div className="grid grid-cols-2 gap-2">
+                {mockTags.map(tag => (
+                  <Button
+                    key={tag.id}
+                    variant="outline"
+                    className="justify-start"
+                    onClick={() => selectedClient && handleAddTagToClient(selectedClient.id, tag.id)}
+                    disabled={selectedClient && clientTags[selectedClient.id]?.includes(tag.id)}
+                  >
+                    <span className={`w-3 h-3 rounded-full ${tag.color} mr-2`}></span>
+                    {tag.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Fechar</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog para adicionar nota */}
+      <Dialog open={clientNoteDialogOpen} onOpenChange={setClientNoteDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar Nota</DialogTitle>
+            <DialogDescription>
+              {selectedClient && `Adicione uma nota para o cliente "${selectedClient.name}"`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleAddNote}>
+            <div className="grid gap-4 py-4">
+              <div>
+                <Label htmlFor="note" className="text-right mb-2 block">
+                  Texto da Nota
+                </Label>
+                <Textarea
+                  id="note"
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  className="min-h-[100px]"
+                  placeholder="Digite sua nota..."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancelar</Button>
+              </DialogClose>
+              <Button type="submit">Adicionar Nota</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default ClientManagement;
