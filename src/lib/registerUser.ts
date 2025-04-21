@@ -31,41 +31,42 @@ export async function registerUser({ name, email, password, isCompany }: Registe
 
   const userId = signUpData.user.id;
 
-  // Etapa 2: criar empresa se for company
-  let companyId: string | undefined = undefined;
-  if (isCompany) {
-    const { data: companyInsert, error: companyError } = await supabase
-      .from("companies")
-      .insert([{ name, email, owner_id: userId }])
-      .select("id")
-      .single();
+  try {
+    // Etapa 2: criar empresa se for company
+    let companyId: string | undefined = undefined;
+    if (isCompany) {
+      const { data: companyInsert, error: companyError } = await supabase
+        .from("companies")
+        .insert([{ name, email, owner_id: userId }])
+        .select("id")
+        .single();
 
-    if (companyError) {
-      // rollback usuário Auth
-      await supabase.auth.admin.deleteUser(userId);
-      throw new Error("Erro ao criar empresa: " + companyError.message);
+      if (companyError) {
+        throw new Error("Erro ao criar empresa: " + companyError.message);
+      }
+
+      companyId = companyInsert?.id;
     }
 
-    companyId = companyInsert?.id;
-  }
+    // Etapa 3: atualizar profile com company_id (e papel 'admin' se company)
+    const { error: profileUpdateError } = await supabase
+      .from("profiles")
+      .update({ company_id: companyId, role: isCompany ? "admin" : "user" })
+      .eq("id", userId);
 
-  // Etapa 3: atualizar profile com company_id (e paper 'admin' se company)
-  const { error: profileUpdateError } = await supabase
-    .from("profiles")
-    .update({ company_id: companyId, role: isCompany ? "admin" : "user" })
-    .eq("id", userId);
-
-  if (profileUpdateError) {
-    // rollback tudo
-    if (companyId) {
-      await supabase.from("companies").delete().eq("id", companyId);
+    if (profileUpdateError) {
+      throw new Error("Erro ao atualizar perfil: " + profileUpdateError.message);
     }
-    await supabase.auth.admin.deleteUser(userId);
-    throw new Error("Erro ao atualizar perfil: " + profileUpdateError.message);
-  }
 
-  return {
-    user: signUpData.user,
-    companyId
-  };
+    return {
+      user: signUpData.user,
+      companyId
+    };
+  } catch (error: any) {
+    // Se tiver erro, já não vamos tentar fazer rollback do usuário Auth
+    // já que o usuário poderá tentar novamente o fluxo com o mesmo email
+    // e o sistema vai apenas atualizar o profile/company
+    console.error("Erro no processo de registro:", error);
+    throw error;
+  }
 }

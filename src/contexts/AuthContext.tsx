@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,10 +8,14 @@ import { toast } from 'sonner';
 import { registerUser } from "@/lib/registerUser";
 import { loginUser } from "@/lib/loginUser";
 import { hydrateUser } from "@/lib/hydrateUser";
+import { UserProfile } from '@/types/user';
+import { Company } from '@/types/company';
 
 type AuthContextType = {
   session: Session | null;
   user: User | null;
+  profile: UserProfile | null;
+  company: Company | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string, isCompany: boolean) => Promise<void>;
@@ -22,26 +27,63 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast: toastNotification } = useToast();
 
+  // Função para buscar dados de perfil e empresa
+  const fetchUserData = async (userId: string) => {
+    try {
+      const result = await hydrateUser();
+      if (result.profile) setProfile(result.profile);
+      if (result.company) setCompany(result.company);
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+    }
+  };
+
   useEffect(() => {
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        
+        // Use setTimeout to avoid deadlock with Supabase client
+        if (currentSession?.user) {
+          setTimeout(() => {
+            fetchUserData(currentSession.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+          setCompany(null);
+        }
+        
         setLoading(false);
         
         if (event === 'SIGNED_OUT') {
           navigate('/login');
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Check if on login or register page, redirect to app
+          const path = window.location.pathname;
+          if (path === '/login' || path === '/register') {
+            navigate('/app');
+          }
         }
       }
     );
 
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
+      
+      if (currentSession?.user) {
+        fetchUserData(currentSession.user.id);
+      }
+      
       setLoading(false);
     });
 
@@ -53,7 +95,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
-      await loginUser(email, password);
+      const result = await loginUser(email, password);
+      if (result.profile) setProfile(result.profile);
+      if (result.company) setCompany(result.company);
+      
       toast.success('Login realizado com sucesso!');
       await new Promise((resolve) => setTimeout(resolve, 900)); // Breve delay visual
       navigate('/app');
@@ -78,7 +123,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, name: string, isCompany: boolean) => {
     setLoading(true);
     try {
-      await registerUser({ name, email, password, isCompany });
+      const result = await registerUser({ name, email, password, isCompany });
+      
+      // Login automático após registro
+      const loginResult = await loginUser(email, password);
+      if (loginResult.profile) setProfile(loginResult.profile);
+      if (loginResult.company) setCompany(loginResult.company);
+      
       toast.success('Cadastro realizado com sucesso!');
       await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate('/app');
@@ -92,6 +143,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
       } else if (error.message.includes('Email format is invalid')) {
         errorMessage = 'O formato do email é inválido.';
+      } else {
+        errorMessage = error.message;
       }
       
       toastNotification({
@@ -106,12 +159,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setProfile(null);
+    setCompany(null);
     toast.info('Você saiu do sistema');
     navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      session, 
+      user, 
+      profile, 
+      company, 
+      loading, 
+      signIn, 
+      signUp, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
