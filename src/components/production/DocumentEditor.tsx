@@ -278,7 +278,7 @@ const DocumentEditor = () => {
   const breadcrumbPath = getCurrentFolderPath();
 
   return (
-    <div className="bg-card rounded-lg shadow-md flex flex-col h-[calc(100vh-16rem)]">
+    <div className="h-full flex flex-col bg-card rounded-lg shadow-md">
       <div className="flex justify-between items-center p-4 border-b">
         <div className="flex items-center gap-4">
           <Select 
@@ -526,175 +526,186 @@ const DocumentEditor = () => {
       </div>
 
       <div className="flex-1 overflow-auto bg-transparent dark:bg-gray-900/30">
-        <TabsContent value="edit" className="h-full">
-          <div className="h-full p-8 flex justify-center">
-            <div className="w-[210mm] min-h-[297mm] shadow-lg bg-white dark:bg-gray-800 p-[2cm] mx-auto border">
-              <EditorContent
-                content={content}
-                fontFamily={fontFamily}
-                textColor={textColor}
-                backgroundColor={backgroundColor}
-                textAlignment={textAlignment}
-                onUpdateContent={handleUpdateContent}
-              />
+        <TabsContent value="edit" className="h-full m-0 p-0">
+          <div className="h-full overflow-auto">
+            <div className="min-h-full p-8 bg-gray-50 dark:bg-gray-900/50">
+              <div className="w-[210mm] min-h-[297mm] shadow-lg bg-white dark:bg-gray-800 p-[2cm] mx-auto border">
+                <EditorContent
+                  content={content}
+                  fontFamily={fontFamily}
+                  textColor={textColor}
+                  backgroundColor={backgroundColor}
+                  textAlignment={textAlignment}
+                  onUpdateContent={handleUpdateContent}
+                />
+              </div>
+              <div className="h-16"></div>
             </div>
           </div>
         </TabsContent>
         
-        <TabsContent value="preview" className="h-full">
-          <div className="h-full p-8 flex justify-center">
-            <div className="w-[210mm] min-h-[297mm] shadow-lg bg-white dark:bg-gray-800 p-[2cm] mx-auto border">
-              <PreviewContent
-                content={content}
-                fontFamily={fontFamily}
-                textColor={textColor}
-                backgroundColor={backgroundColor}
-                textAlignment={textAlignment}
-              />
+        <TabsContent value="preview" className="h-full m-0 p-0">
+          <div className="h-full overflow-auto">
+            <div className="min-h-full p-8 bg-gray-50 dark:bg-gray-900/50">
+              <div className="w-[210mm] min-h-[297mm] shadow-lg bg-white dark:bg-gray-800 p-[2cm] mx-auto border">
+                <PreviewContent
+                  content={content}
+                  fontFamily={fontFamily}
+                  textColor={textColor}
+                  backgroundColor={backgroundColor}
+                  textAlignment={textAlignment}
+                />
+              </div>
+              <div className="h-16"></div>
             </div>
           </div>
         </TabsContent>
         
-        <TabsContent value="files" className="h-full p-4">
-          <div className="bg-white dark:bg-gray-800 h-full rounded-lg border shadow-sm overflow-hidden">
-            <div className="p-4 border-b flex justify-between items-center">
-              <div className="text-sm font-medium">Explorador de Arquivos</div>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setIsNewFolderDialogOpen(true)}
-                >
-                  <FolderPlus size={16} className="mr-1" />
-                  Nova Pasta
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setIsNewFileDialogOpen(true)}
-                >
-                  <FilePlus size={16} className="mr-1" />
-                  Novo Arquivo
-                </Button>
-                {selectedItems.length > 0 && (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+        <TabsContent value="files" className="h-full m-0 p-0">
+          <div className="h-full overflow-auto p-4">
+            <div className="bg-white dark:bg-gray-800 h-full rounded-lg border shadow-sm overflow-hidden flex flex-col">
+              <div className="p-4 border-b flex justify-between items-center">
+                <div className="text-sm font-medium">Explorador de Arquivos</div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsNewFolderDialogOpen(true)}
+                  >
+                    <FolderPlus size={16} className="mr-1" />
+                    Nova Pasta
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsNewFileDialogOpen(true)}
+                  >
+                    <FilePlus size={16} className="mr-1" />
+                    Novo Arquivo
+                  </Button>
+                  {selectedItems.length > 0 && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          const item = folderItems.find(item => item.id === selectedItems[0]);
+                          if (item) {
+                            setItemToRename(item);
+                            setNewName(item.name || '');
+                            setIsRenameDialogOpen(true);
+                          }
+                        }}
+                        disabled={selectedItems.length !== 1}
+                      >
+                        Renomear
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={handleDeleteSelected}
+                      >
+                        <Trash size={16} className="mr-1" />
+                        Excluir
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              <div className="p-2 border-b flex items-center text-sm">
+                {breadcrumbPath.map((item, index) => (
+                  <div key={item.id} className="flex items-center">
+                    {index > 0 && <span className="mx-1">/</span>}
+                    <button 
+                      className="hover:underline text-blue-600 dark:text-blue-400"
+                      onClick={() => handleNavigateToFolder(item.id)}
+                    >
+                      {item.name}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex-1 overflow-auto p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {currentFolder !== "root" && (
+                    <div 
+                      className="p-3 border rounded-md flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={() => {
-                        const item = folderItems.find(item => item.id === selectedItems[0]);
-                        if (item) {
-                          setItemToRename(item);
-                          setNewName(item.name || '');
-                          setIsRenameDialogOpen(true);
+                        const currentFolderObj = folders.find(f => f.id === currentFolder);
+                        if (currentFolderObj && currentFolderObj.parent) {
+                          handleNavigateToFolder(currentFolderObj.parent);
+                        } else {
+                          handleNavigateToFolder("root");
                         }
                       }}
-                      disabled={selectedItems.length !== 1}
                     >
-                      Renomear
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={handleDeleteSelected}
-                    >
-                      <Trash size={16} className="mr-1" />
-                      Excluir
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            <div className="p-2 border-b flex items-center text-sm">
-              {breadcrumbPath.map((item, index) => (
-                <div key={item.id} className="flex items-center">
-                  {index > 0 && <span className="mx-1">/</span>}
-                  <button 
-                    className="hover:underline text-blue-600 dark:text-blue-400"
-                    onClick={() => handleNavigateToFolder(item.id)}
-                  >
-                    {item.name}
-                  </button>
-                </div>
-              ))}
-            </div>
-            
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {currentFolder !== "root" && (
-                <div 
-                  className="p-3 border rounded-md flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                  onClick={() => {
-                    const currentFolderObj = folders.find(f => f.id === currentFolder);
-                    if (currentFolderObj && currentFolderObj.parent) {
-                      handleNavigateToFolder(currentFolderObj.parent);
-                    } else {
-                      handleNavigateToFolder("root");
-                    }
-                  }}
-                >
-                  <Folder size={20} className="text-yellow-500" />
-                  <span>..</span>
-                </div>
-              )}
-              
-              {folderItems.map((item) => (
-                <div 
-                  key={item.id}
-                  className={`p-3 border rounded-md flex items-center gap-2 cursor-pointer ${
-                    selectedItems.includes(item.id) 
-                      ? 'bg-blue-100 dark:bg-blue-800/30 border-blue-300 dark:border-blue-500' 
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                  onClick={(e) => {
-                    if (e.ctrlKey || e.metaKey) {
-                      setSelectedItems(prev => 
-                        prev.includes(item.id) 
-                          ? prev.filter(id => id !== item.id)
-                          : [...prev, item.id]
-                      );
-                    } else if (e.shiftKey && selectedItems.length > 0) {
-                      const allIds = folderItems.map(i => i.id);
-                      const lastSelectedIndex = allIds.indexOf(selectedItems[selectedItems.length - 1]);
-                      const currentIndex = allIds.indexOf(item.id);
-                      const start = Math.min(lastSelectedIndex, currentIndex);
-                      const end = Math.max(lastSelectedIndex, currentIndex);
-                      const rangeIds = allIds.slice(start, end + 1);
-                      setSelectedItems([...new Set([...selectedItems, ...rangeIds])]);
-                    } else {
-                      setSelectedItems([item.id]);
-                      
-                      if ('name' in item && 'parent' in item) {
-                        handleNavigateToFolder(item.id);
-                      } else if ('type' in item) {
-                        setActiveDocument(item);
-                        setContent(item.content);
-                        setViewMode('edit');
-                      }
-                    }
-                  }}
-                  onDoubleClick={() => {
-                    if ('name' in item && 'parent' in item) {
-                      handleNavigateToFolder(item.id);
-                    } else if ('type' in item) {
-                      setActiveDocument(item);
-                      setContent(item.content);
-                      setViewMode('edit');
-                    }
-                  }}
-                >
-                  {'parent' in item ? (
-                    <Folder size={20} className="text-yellow-500" />
-                  ) : ('type' in item && item.type === 'spreadsheet') ? (
-                    <FileSpreadsheet size={20} className="text-green-500" />
-                  ) : (
-                    <FileText size={20} className="text-blue-500" />
+                      <Folder size={20} className="text-yellow-500" />
+                      <span>..</span>
+                    </div>
                   )}
-                  <span className="truncate">
-                    {'name' in item && item.name}
-                  </span>
+                  
+                  {folderItems.map((item) => (
+                    <div 
+                      key={item.id}
+                      className={`p-3 border rounded-md flex items-center gap-2 cursor-pointer ${
+                        selectedItems.includes(item.id) 
+                          ? 'bg-blue-100 dark:bg-blue-800/30 border-blue-300 dark:border-blue-500' 
+                          : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                      onClick={(e) => {
+                        if (e.ctrlKey || e.metaKey) {
+                          setSelectedItems(prev => 
+                            prev.includes(item.id) 
+                              ? prev.filter(id => id !== item.id)
+                              : [...prev, item.id]
+                          );
+                        } else if (e.shiftKey && selectedItems.length > 0) {
+                          const allIds = folderItems.map(i => i.id);
+                          const lastSelectedIndex = allIds.indexOf(selectedItems[selectedItems.length - 1]);
+                          const currentIndex = allIds.indexOf(item.id);
+                          const start = Math.min(lastSelectedIndex, currentIndex);
+                          const end = Math.max(lastSelectedIndex, currentIndex);
+                          const rangeIds = allIds.slice(start, end + 1);
+                          setSelectedItems([...new Set([...selectedItems, ...rangeIds])]);
+                        } else {
+                          setSelectedItems([item.id]);
+                          
+                          if ('name' in item && 'parent' in item) {
+                            // É uma pasta
+                          } else if ('type' in item) {
+                            // É um documento
+                            setActiveDocument(item);
+                            setContent(item.content);
+                            setViewMode('edit');
+                          }
+                        }
+                      }}
+                      onDoubleClick={() => {
+                        if ('name' in item && 'parent' in item) {
+                          handleNavigateToFolder(item.id);
+                        } else if ('type' in item) {
+                          setActiveDocument(item);
+                          setContent(item.content);
+                          setViewMode('edit');
+                        }
+                      }}
+                    >
+                      {'parent' in item ? (
+                        <Folder size={20} className="text-yellow-500" />
+                      ) : ('type' in item && item.type === 'spreadsheet') ? (
+                        <FileSpreadsheet size={20} className="text-green-500" />
+                      ) : (
+                        <FileText size={20} className="text-blue-500" />
+                      )}
+                      <span className="truncate">
+                        {'name' in item && item.name}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </TabsContent>

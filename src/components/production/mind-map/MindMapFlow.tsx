@@ -12,9 +12,24 @@ import {
   Edge,
   useReactFlow,
   NodeChange,
-  Connection
+  Connection,
+  Panel
 } from "reactflow";
-import { useToast } from "@/hooks/use-toast";
+import { 
+  useToast
+} from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Palette, Settings, ZoomIn, ZoomOut } from "lucide-react";
+
 import CustomNode from "./CustomNode";
 import SidebarPanel from "./SidebarPanel";
 import { initialNodes, initialEdges, snapGrid } from "./constants";
@@ -36,6 +51,14 @@ function MindMapFlow() {
   const [isEditingNode, setIsEditingNode] = useState(false);
   const [isEditingEdge, setIsEditingEdge] = useState(false);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+  const [showStylePanel, setShowStylePanel] = useState(false);
+  const [defaultNodeColor, setDefaultNodeColor] = useState("#ffffff");
+  const [defaultBorderColor, setDefaultBorderColor] = useState("#000000");
+  const [defaultTextColor, setDefaultTextColor] = useState("#000000");
+  const [defaultBorderStyle, setDefaultBorderStyle] = useState("solid");
+  const [defaultBorderWidth, setDefaultBorderWidth] = useState("1px");
+  const [defaultBorderRadius, setDefaultBorderRadius] = useState("4px");
+  
   const { toast } = useToast();
   const { templates, createTemplateNode } = useNodeTemplates();
 
@@ -73,12 +96,12 @@ function MindMapFlow() {
         onEdit: handleNodeEdit
       },
       style: {
-        backgroundColor: '#ffffff',
-        borderColor: '#000000',
-        color: '#000000',
-        borderStyle: 'solid',
-        borderWidth: '1px',
-        borderRadius: '4px',
+        backgroundColor: defaultNodeColor,
+        borderColor: defaultBorderColor,
+        color: defaultTextColor,
+        borderStyle: defaultBorderStyle,
+        borderWidth: defaultBorderWidth,
+        borderRadius: defaultBorderRadius,
         fontSize: '14px',
       }
     };
@@ -109,12 +132,12 @@ function MindMapFlow() {
         y: Math.random() * 500,
       },
       style: {
-        backgroundColor: '#ffffff',
-        borderColor: '#000000',
-        color: '#000000',
-        borderStyle: 'solid',
-        borderWidth: '1px',
-        borderRadius: '4px',
+        backgroundColor: defaultNodeColor,
+        borderColor: defaultBorderColor,
+        color: defaultTextColor,
+        borderStyle: defaultBorderStyle,
+        borderWidth: defaultBorderWidth,
+        borderRadius: defaultBorderRadius,
         fontSize: '14px',
       }
     };
@@ -249,6 +272,29 @@ function MindMapFlow() {
     fitView({ padding: 0.2 });
   };
 
+  // Style all nodes with the current default styles
+  const applyStylesToAllNodes = () => {
+    const updatedNodes = nodes.map(node => ({
+      ...node,
+      style: {
+        ...node.style,
+        backgroundColor: defaultNodeColor,
+        borderColor: defaultBorderColor,
+        color: defaultTextColor,
+        borderStyle: defaultBorderStyle,
+        borderWidth: defaultBorderWidth,
+        borderRadius: defaultBorderRadius,
+      }
+    }));
+    
+    setNodes(updatedNodes);
+    
+    toast({
+      title: "Estilos aplicados",
+      description: "Os estilos foram aplicados a todos os nós com sucesso.",
+    });
+  };
+
   // Template node function
   const addTemplateNode = (template: any) => {
     const nodeHandlers = { 
@@ -258,6 +304,17 @@ function MindMapFlow() {
     };
     
     const newNode = createTemplateNode(template, nodeHandlers);
+    // Apply current default styles to template node
+    newNode.style = {
+      ...newNode.style,
+      backgroundColor: defaultNodeColor,
+      borderColor: defaultBorderColor,
+      color: defaultTextColor,
+      borderStyle: defaultBorderStyle,
+      borderWidth: defaultBorderWidth,
+      borderRadius: defaultBorderRadius,
+    };
+    
     setNodes((nds) => nds.concat(newNode));
   };
 
@@ -295,6 +352,162 @@ function MindMapFlow() {
             <Controls />
             <MiniMap zoomable pannable nodeClassName="bg-primary" />
             <Background />
+            
+            {/* Style Panel */}
+            <Panel position="top-right" className="z-10">
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setShowStylePanel(!showStylePanel)}
+                  className="bg-white dark:bg-gray-800 shadow-md"
+                >
+                  <Palette size={18} />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleZoomIn}
+                  className="bg-white dark:bg-gray-800 shadow-md"
+                >
+                  <ZoomIn size={18} />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleZoomOut}
+                  className="bg-white dark:bg-gray-800 shadow-md"
+                >
+                  <ZoomOut size={18} />
+                </Button>
+              </div>
+              
+              {showStylePanel && (
+                <div className="mt-2 p-4 bg-white dark:bg-gray-800 rounded-md shadow-md border min-w-[230px]">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-medium">Estilos dos Nós</h3>
+                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setShowStylePanel(false)}>
+                      <span>×</span>
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="node-color" className="text-xs">Cor do Fundo</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="node-color"
+                          type="color"
+                          value={defaultNodeColor}
+                          onChange={(e) => setDefaultNodeColor(e.target.value)}
+                          className="w-12 h-8 p-1"
+                        />
+                        <Input 
+                          type="text"
+                          value={defaultNodeColor}
+                          onChange={(e) => setDefaultNodeColor(e.target.value)}
+                          className="flex-1 h-8"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="border-color" className="text-xs">Cor da Borda</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="border-color"
+                          type="color"
+                          value={defaultBorderColor}
+                          onChange={(e) => setDefaultBorderColor(e.target.value)}
+                          className="w-12 h-8 p-1"
+                        />
+                        <Input 
+                          type="text"
+                          value={defaultBorderColor}
+                          onChange={(e) => setDefaultBorderColor(e.target.value)}
+                          className="flex-1 h-8"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="text-color" className="text-xs">Cor do Texto</Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          id="text-color"
+                          type="color"
+                          value={defaultTextColor}
+                          onChange={(e) => setDefaultTextColor(e.target.value)}
+                          className="w-12 h-8 p-1"
+                        />
+                        <Input 
+                          type="text"
+                          value={defaultTextColor}
+                          onChange={(e) => setDefaultTextColor(e.target.value)}
+                          className="flex-1 h-8"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="border-style" className="text-xs">Estilo da Borda</Label>
+                      <Select value={defaultBorderStyle} onValueChange={setDefaultBorderStyle}>
+                        <SelectTrigger id="border-style" className="h-8">
+                          <SelectValue placeholder="Estilo da borda" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="solid">Sólida</SelectItem>
+                          <SelectItem value="dashed">Tracejada</SelectItem>
+                          <SelectItem value="dotted">Pontilhada</SelectItem>
+                          <SelectItem value="double">Dupla</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="border-width" className="text-xs">Espessura da Borda</Label>
+                      <Select value={defaultBorderWidth} onValueChange={setDefaultBorderWidth}>
+                        <SelectTrigger id="border-width" className="h-8">
+                          <SelectValue placeholder="Espessura da borda" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1px">Fina (1px)</SelectItem>
+                          <SelectItem value="2px">Média (2px)</SelectItem>
+                          <SelectItem value="3px">Grossa (3px)</SelectItem>
+                          <SelectItem value="4px">Muito Grossa (4px)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="border-radius" className="text-xs">Arredondamento</Label>
+                      <Select value={defaultBorderRadius} onValueChange={setDefaultBorderRadius}>
+                        <SelectTrigger id="border-radius" className="h-8">
+                          <SelectValue placeholder="Arredondamento" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0px">Sem arredondamento</SelectItem>
+                          <SelectItem value="4px">Suave (4px)</SelectItem>
+                          <SelectItem value="8px">Médio (8px)</SelectItem>
+                          <SelectItem value="16px">Alto (16px)</SelectItem>
+                          <SelectItem value="24px">Muito Alto (24px)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <Button 
+                      className="w-full mt-2" 
+                      onClick={applyStylesToAllNodes}
+                      size="sm"
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      Aplicar a Todos os Nós
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </Panel>
+            
             <MindMapControls
               onZoomIn={handleZoomIn}
               onZoomOut={handleZoomOut}
