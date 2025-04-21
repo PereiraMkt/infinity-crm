@@ -130,7 +130,7 @@ const ProductionManagement = () => {
     title: "",
     description: "",
     client: "",
-    priority: "medium",
+    priority: "medium" as "low" | "medium" | "high", // Type assertion to match KanbanCardItem
     startDate: "",
     endDate: "",
     assignee: "user-1"
@@ -173,16 +173,15 @@ const ProductionManagement = () => {
     
     const assignedUser = users.find(user => user.id === newTask.assignee) || users[0];
     
+    // Ensure the new task conforms to the KanbanCardItem type
     const newTaskItem = {
       id: `task-${Date.now()}`,
       title: newTask.title,
       description: newTask.description,
       client: newTask.client,
       assignedTo: assignedUser,
-      priority: newTask.priority,
-      completion: 0,
-      startDate: new Date(newTask.startDate || new Date()),
-      endDate: new Date(newTask.endDate || new Date()),
+      priority: newTask.priority as "low" | "medium" | "high", // Explicit type casting
+      completion: 0
     };
     
     // Add to backlog column
@@ -202,7 +201,7 @@ const ProductionManagement = () => {
       title: "",
       description: "",
       client: "",
-      priority: "medium",
+      priority: "medium" as "low" | "medium" | "high",
       startDate: "",
       endDate: "",
       assignee: "user-1"
@@ -297,7 +296,7 @@ const ProductionManagement = () => {
                 <Label htmlFor="priority">Prioridade</Label>
                 <Select 
                   value={newTask.priority} 
-                  onValueChange={(value) => handleNewTaskChange("priority", value)}
+                  onValueChange={(value: "low" | "medium" | "high") => handleNewTaskChange("priority", value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a prioridade" />

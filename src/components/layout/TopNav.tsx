@@ -7,9 +7,11 @@ import { Link } from "react-router-dom";
 
 interface TopNavProps {
   onMenuButtonClick: () => void;
+  isSidebarOpen?: boolean;
+  toggleSidebar?: () => void;
 }
 
-export function TopNav({ onMenuButtonClick }: TopNavProps) {
+export function TopNav({ onMenuButtonClick, isSidebarOpen, toggleSidebar }: TopNavProps) {
   const { user, profile } = useAuth();
 
   return (

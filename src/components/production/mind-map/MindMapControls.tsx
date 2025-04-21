@@ -39,7 +39,7 @@ const MindMapControls = ({ onZoomIn, onZoomOut, onFitView, onAddNode }: MindMapC
       {onAddNode && (
         <Button 
           size="sm" 
-          variant="primary" 
+          variant="default" 
           className="h-8 w-8 p-0 rounded-full shadow-md bg-primary"
           onClick={onAddNode}
         >

@@ -22,7 +22,7 @@ const moduleNames: Record<string, string> = {
   "/app/settings": "Configurações"
 };
 
-interface HeaderProps {
+export interface HeaderProps {
   openSidebar: () => void;
   isSidebarOpen: boolean;
   toggleSidebar: () => void;

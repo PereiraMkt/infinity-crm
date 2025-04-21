@@ -1,16 +1,17 @@
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
-import { Node } from "reactflow";
+
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Label, Input } from "@radix-ui/react";
+import { Node, useReactFlow } from "reactflow";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface NodeDialogProps {
   isOpen: boolean;
@@ -42,13 +43,15 @@ const NodeDialog = ({
   onOpenChange,
   selectedNode,
   onDelete,
-}) => {
+}: NodeDialogProps) => {
   const [nodeLabel, setNodeLabel] = useState("");
   const [nodeBgColor, setNodeBgColor] = useState("#8B5CF6");
   const [nodeTextColor, setNodeTextColor] = useState("#FFFFFF");
   const [nodeBorderColor, setNodeBorderColor] = useState("#6D28D9");
   const [nodeShape, setNodeShape] = useState("roundedRect");
   const [nodeLink, setNodeLink] = useState("");
+  
+  const reactFlowInstance = useReactFlow();
   
   useEffect(() => {
     if (selectedNode) {
@@ -63,8 +66,6 @@ const NodeDialog = ({
 
   const handleSave = () => {
     if (!selectedNode) return;
-    
-    const reactFlowInstance = useReactFlow();
     
     reactFlowInstance.setNodes((nodes) =>
       nodes.map((node) => {
