@@ -81,7 +81,7 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
         className={cn(
           "sidebar border-r border-gray-200 dark:border-gray-800 overflow-y-auto transition-all duration-300 relative",
           isCollapsed ? "min-w-16 w-16" : "min-w-64 w-64",
-          isMobile ? "fixed inset-y-0 left-0 z-20 shadow-lg" : "relative"
+          isMobile ? "fixed inset-y-0 left-0 z-20 shadow-lg" : "h-screen"
         )}
       >
         {isMobile && (
@@ -97,7 +97,7 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
           </div>
         )}
         
-        <div className="p-4">
+        <div className="p-4 overflow-y-auto h-full">
           <NavSection 
             title="Menu Principal" 
             items={mainMenuItems} 

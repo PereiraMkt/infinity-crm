@@ -11,13 +11,15 @@ import {
   Node,
   Edge,
   useReactFlow,
-  NodeChange
+  NodeChange,
+  Connection
 } from "reactflow";
 import { useToast } from "@/hooks/use-toast";
 import CustomNode from "./CustomNode";
 import SidebarPanel from "./SidebarPanel";
 import { initialNodes, initialEdges, snapGrid } from "./constants";
 import MindMapControls from "./MindMapControls";
+import NodeEditDialog from "./NodeEditDialog";
 import { NodeDialog, EdgeDialog } from "./NodeDialogs";
 import { useNodeTemplates } from "./NodeTemplates";
 
@@ -26,11 +28,12 @@ function MindMapFlow() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const { fitView, addNodes, setViewport, getViewport } = useReactFlow();
+  const { fitView, setViewport, getViewport } = useReactFlow();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [nodeName, setNodeName] = useState("");
   const [isNodeDialogOpen, setIsNodeDialogOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [isEditingNode, setIsEditingNode] = useState(false);
   const [isEditingEdge, setIsEditingEdge] = useState(false);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const { toast } = useToast();
@@ -39,11 +42,9 @@ function MindMapFlow() {
   const nodeTypes = {
     customNode: CustomNode,
   };
-  
-  const edgeTypes = {};
 
   // Connection handlers
-  const onConnect = useCallback((params: any) => {
+  const onConnect = useCallback((params: Connection) => {
     setEdges((eds) => addEdge(params, eds));
   }, [setEdges]);
 
@@ -69,8 +70,17 @@ function MindMapFlow() {
         label: `${type} node`,
         onNameChange: handleNodeNameChange,
         onDescriptionChange: handleNodeDescriptionChange,
-        onStyleChange: handleNodeStyleChange
+        onEdit: handleNodeEdit
       },
+      style: {
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        color: '#000000',
+        borderStyle: 'solid',
+        borderWidth: '1px',
+        borderRadius: '4px',
+        fontSize: '14px',
+      }
     };
 
     setNodes((nds) => nds.concat(newNode));
@@ -92,12 +102,21 @@ function MindMapFlow() {
         label: nodeName,
         onNameChange: handleNodeNameChange,
         onDescriptionChange: handleNodeDescriptionChange,
-        onStyleChange: handleNodeStyleChange
+        onEdit: handleNodeEdit
       },
       position: {
         x: Math.random() * 500,
         y: Math.random() * 500,
       },
+      style: {
+        backgroundColor: '#ffffff',
+        borderColor: '#000000',
+        color: '#000000',
+        borderStyle: 'solid',
+        borderWidth: '1px',
+        borderRadius: '4px',
+        fontSize: '14px',
+      }
     };
 
     setNodes((nds) => nds.concat(newNode));
@@ -125,12 +144,30 @@ function MindMapFlow() {
     ));
   };
 
-  const handleNodeStyleChange = (id: string, styleProps: any) => {
+  // Open node edit dialog
+  const handleNodeEdit = (id: string) => {
+    const node = nodes.find(node => node.id === id);
+    if (node) {
+      setSelectedNode(node);
+      setIsEditingNode(true);
+    }
+  };
+
+  // Save node edit changes
+  const handleSaveNodeEdit = (nodeId: string, updates: { data: any, style: any }) => {
     setNodes(nodes.map(node => 
-      node.id === id 
-        ? { ...node, data: { ...node.data, ...styleProps } } 
+      node.id === nodeId 
+        ? { 
+            ...node, 
+            data: { ...node.data, ...updates.data }, 
+            style: { ...node.style, ...updates.style }
+          } 
         : node
     ));
+    toast({
+      title: "Nó atualizado",
+      description: "As alterações foram salvas com sucesso.",
+    });
   };
 
   // Node interaction handlers
@@ -191,20 +228,20 @@ function MindMapFlow() {
 
   // Viewport control functions
   const handleZoomIn = () => {
-    const currentViewport = getViewport();
+    const viewport = getViewport();
     setViewport({
-      x: currentViewport.x,
-      y: currentViewport.y,
-      zoom: currentViewport.zoom * 1.1
+      x: viewport.x,
+      y: viewport.y,
+      zoom: viewport.zoom * 1.1
     });
   };
 
   const handleZoomOut = () => {
-    const currentViewport = getViewport();
+    const viewport = getViewport();
     setViewport({
-      x: currentViewport.x,
-      y: currentViewport.y,
-      zoom: currentViewport.zoom * 0.9
+      x: viewport.x,
+      y: viewport.y,
+      zoom: viewport.zoom * 0.9
     });
   };
 
@@ -212,16 +249,12 @@ function MindMapFlow() {
     fitView({ padding: 0.2 });
   };
 
-  const onNodesChangeCustom = (changes: NodeChange[]) => {
-    onNodesChange(changes);
-  };
-
   // Template node function
   const addTemplateNode = (template: any) => {
     const nodeHandlers = { 
       onNameChange: handleNodeNameChange,
       onDescriptionChange: handleNodeDescriptionChange,
-      onStyleChange: handleNodeStyleChange
+      onEdit: handleNodeEdit
     };
     
     const newNode = createTemplateNode(template, nodeHandlers);
@@ -246,13 +279,12 @@ function MindMapFlow() {
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChangeCustom}
+            onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onDrop={onDrop}
             onDragOver={onDragOver}
             nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
             snapToGrid={true}
             snapGrid={snapGrid}
             onNodeDoubleClick={handleNodeDoubleClick}
@@ -261,7 +293,7 @@ function MindMapFlow() {
             className="bg-secondary/50"
           >
             <Controls />
-            <MiniMap />
+            <MiniMap zoomable pannable nodeClassName="bg-primary" />
             <Background />
             <MindMapControls
               onZoomIn={handleZoomIn}
@@ -271,6 +303,14 @@ function MindMapFlow() {
           </ReactFlow>
         </div>
       </div>
+
+      {/* Node Edit Dialog */}
+      <NodeEditDialog 
+        isOpen={isEditingNode}
+        onClose={() => setIsEditingNode(false)}
+        node={selectedNode}
+        onSave={handleSaveNodeEdit}
+      />
 
       {/* Node Delete Dialog */}
       <NodeDialog 

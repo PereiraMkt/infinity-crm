@@ -13,7 +13,7 @@ export function TopNav({ onMenuButtonClick }: TopNavProps) {
   const { user, profile } = useAuth();
 
   return (
-    <header className="h-16 px-4 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between">
+    <header className="h-16 px-4 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between sticky top-0 z-30">
       <div className="flex items-center gap-2 md:gap-4">
         <Button
           variant="ghost"

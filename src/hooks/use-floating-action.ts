@@ -56,6 +56,8 @@ export const useFloatingAction = ({
     toggleOpen,
     toggleFullScreen,
     setFloatingActionOpen,
-    handleResizing
+    handleResizing,
+    setChatHeight,
+    setChatWidth
   };
 };
