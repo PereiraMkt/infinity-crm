@@ -14,23 +14,23 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Filter, 
-  Settings, 
   ZoomIn, 
   ZoomOut
 } from 'lucide-react';
-import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
+import { format, addDays, subDays, startOfWeek, eachDayOfInterval, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { KanbanCardItem } from '@/components/kanban/types';
+
+// Largura A4 (~794px), a tabela Gantt deve expandir em largura
+const TIME_BLOCK_WIDTH = 48; // um pouco menor para caber na largura A4/grafico expandido
+const ROW_HEIGHT = 58;
+const HEADER_HEIGHT = 60;
 
 interface GanttChartProps {
   tasks: KanbanCardItem[];
   onTaskUpdate?: (updatedTask: KanbanCardItem) => void;
 }
-
-const TIME_BLOCK_WIDTH = 60; // Width in pixels of each time block
-const ROW_HEIGHT = 50; // Height of each task row
-const HEADER_HEIGHT = 60; // Height of the header row
 
 const GanttChart: React.FC<GanttChartProps> = ({ tasks, onTaskUpdate }) => {
   const [startDate, setStartDate] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -39,121 +39,55 @@ const GanttChart: React.FC<GanttChartProps> = ({ tasks, onTaskUpdate }) => {
   const [filter, setFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [visibleTasks, setVisibleTasks] = useState<KanbanCardItem[]>(tasks);
 
-  // Calculate days in the visible range
   useEffect(() => {
-    const endDate = addDays(startDate, 13); // 2 weeks view by default
-    const daysInRange = eachDayOfInterval({ start: startDate, end: endDate });
-    setDays(daysInRange);
+    const endDate = addDays(startDate, 29); // 30 dias na tela
+    setDays(eachDayOfInterval({ start: startDate, end: endDate }));
   }, [startDate]);
 
-  // Apply filters
   useEffect(() => {
-    if (filter === 'all') {
-      setVisibleTasks(tasks);
-    } else {
-      setVisibleTasks(tasks.filter(task => task.priority === filter));
-    }
+    if (filter === 'all') setVisibleTasks(tasks);
+    else setVisibleTasks(tasks.filter(task => task.priority === filter));
   }, [tasks, filter]);
 
-  // Navigate to previous period
-  const handlePrevPeriod = () => {
-    setStartDate(subDays(startDate, 14));
-  };
+  const handlePrevPeriod = () => setStartDate(subDays(startDate, 30));
+  const handleNextPeriod = () => setStartDate(addDays(startDate, 30));
+  const handleZoomIn = () => zoomLevel < 2 && setZoomLevel(zoomLevel + 0.25);
+  const handleZoomOut = () => zoomLevel > 0.5 && setZoomLevel(zoomLevel - 0.25);
 
-  // Navigate to next period
-  const handleNextPeriod = () => {
-    setStartDate(addDays(startDate, 14));
-  };
-
-  // Zoom in
-  const handleZoomIn = () => {
-    if (zoomLevel < 2) {
-      setZoomLevel(zoomLevel + 0.25);
-    }
-  };
-
-  // Zoom out
-  const handleZoomOut = () => {
-    if (zoomLevel > 0.5) {
-      setZoomLevel(zoomLevel - 0.25);
-    }
-  };
-
-  // Calculate bar position and width for a task
   const getTaskBarStyle = (task: KanbanCardItem) => {
-    if (!task.startDate || !task.endDate) {
-      return {
-        display: 'none',
-      };
-    }
-
-    const taskStart = new Date(task.startDate);
-    const taskEnd = new Date(task.endDate);
-
-    // Check if the task is within the visible range
-    const isStartVisible = days.some(day => isSameDay(day, taskStart));
-    const isEndVisible = days.some(day => isSameDay(day, taskEnd));
-    const isSpanningVisible = taskStart < days[0] && taskEnd > days[days.length - 1];
-
-    if (!isStartVisible && !isEndVisible && !isSpanningVisible) {
-      return {
-        display: 'none',
-      };
-    }
-
-    // Calculate position and width
+    if (!task.startDate || !task.endDate) return { display: 'none' };
+    const tStart = new Date(task.startDate), tEnd = new Date(task.endDate);
     const firstDayTimestamp = days[0].getTime();
-    let startOffset = Math.max(0, (taskStart.getTime() - firstDayTimestamp) / (24 * 60 * 60 * 1000) * TIME_BLOCK_WIDTH * zoomLevel);
-    
-    // Handle tasks that start before the visible range
-    if (taskStart < days[0]) {
-      startOffset = 0;
-    }
+    let startOffset = Math.max(0, (tStart.getTime() - firstDayTimestamp) / (24 * 60 * 60 * 1000) * TIME_BLOCK_WIDTH * zoomLevel);
+    if (tStart < days[0]) startOffset = 0;
 
-    // Calculate width
     let width;
-    if (taskStart < days[0] && taskEnd > days[days.length - 1]) {
-      // Task spans the entire visible range
+    if (tStart < days[0] && tEnd > days[days.length - 1])
       width = days.length * TIME_BLOCK_WIDTH * zoomLevel;
-    } else if (taskStart < days[0]) {
-      // Task starts before visible range
-      const daysVisible = Math.min(
-        (taskEnd.getTime() - days[0].getTime()) / (24 * 60 * 60 * 1000) + 1,
-        days.length
-      );
-      width = daysVisible * TIME_BLOCK_WIDTH * zoomLevel;
-    } else if (taskEnd > days[days.length - 1]) {
-      // Task ends after visible range
-      const daysVisible = Math.min(
-        (days[days.length - 1].getTime() - taskStart.getTime()) / (24 * 60 * 60 * 1000) + 1,
-        days.length
-      );
-      width = daysVisible * TIME_BLOCK_WIDTH * zoomLevel;
-    } else {
-      // Task is fully within the visible range
-      const durationDays = (taskEnd.getTime() - taskStart.getTime()) / (24 * 60 * 60 * 1000) + 1;
-      width = durationDays * TIME_BLOCK_WIDTH * zoomLevel;
-    }
+    else if (tStart < days[0])
+      width = (Math.min((tEnd.getTime() - days[0].getTime()) / (24 * 60 * 60 * 1000) + 1, days.length)) * TIME_BLOCK_WIDTH * zoomLevel;
+    else if (tEnd > days[days.length - 1])
+      width = (Math.min((days[days.length - 1].getTime() - tStart.getTime()) / (24 * 60 * 60 * 1000) + 1, days.length)) * TIME_BLOCK_WIDTH * zoomLevel;
+    else
+      width = ((tEnd.getTime() - tStart.getTime()) / (24 * 60 * 60 * 1000) + 1) * TIME_BLOCK_WIDTH * zoomLevel;
 
-    // Get color based on priority
     const getBarColor = () => {
       switch (task.priority) {
-        case 'high': return 'rgb(239, 68, 68)';
-        case 'medium': return 'rgb(249, 115, 22)';
-        case 'low': return 'rgb(34, 197, 94)';
-        default: return 'rgb(59, 130, 246)';
+        case 'high': return 'rgb(34,197,94)';
+        case 'medium': return 'rgb(59,130,246)';
+        case 'low': return 'rgb(156,163,175)';
+        default: return 'rgb(209,213,219)';
       }
     };
-
     return {
       left: `${startOffset}px`,
       width: `${width}px`,
-      height: `${ROW_HEIGHT - 20}px`,
-      top: '10px',
+      height: `${ROW_HEIGHT - 18}px`,
+      top: '9px',
       backgroundColor: getBarColor(),
       position: 'absolute' as 'absolute',
-      borderRadius: '4px',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+      borderRadius: '6px',
+      boxShadow: '0 1px 3px rgba(0,0,0,.09)',
       display: 'flex',
       alignItems: 'center',
       paddingLeft: '8px',
@@ -161,54 +95,38 @@ const GanttChart: React.FC<GanttChartProps> = ({ tasks, onTaskUpdate }) => {
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap' as 'nowrap',
+      fontWeight: '500'
     };
   };
 
-  // Calculate remaining time
   const getRemainingTime = (task: KanbanCardItem) => {
     if (!task.endDate) return null;
-    
-    const now = new Date();
-    const end = new Date(task.endDate);
-    
+    const now = new Date(), end = new Date(task.endDate);
     if (now > end) return 'Atrasado';
-    
     const diffInMs = end.getTime() - now.getTime();
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-    const diffInMinutes = Math.floor((diffInMs % (1000 * 60 * 60)) / (1000 * 60));
-    
-    return `${diffInHours}h ${diffInMinutes}m`;
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    const diffInHours = Math.floor((diffInMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    return diffInDays > 0 ? `${diffInDays}d ${diffInHours}h` : `${diffInHours}h`;
   };
 
   return (
-    <div className="bg-card/80 dark:bg-gray-800/40 backdrop-blur-md shadow-md border border-border/40 rounded-lg">
-      {/* Chart Controls */}
-      <div className="p-4 border-b flex flex-wrap items-center justify-between gap-4">
+    <div className="relative w-full bg-white border border-gray-200 rounded-lg shadow">
+      {/* Controles superiores inspirados no print */}
+      <div className="p-2 flex items-center justify-between border-b bg-neutral-50">
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handlePrevPeriod}
-            className="h-8 w-8 p-0"
-          >
+          <Button variant="outline" size="sm" onClick={handlePrevPeriod}>
             <ChevronLeft size={16} />
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleNextPeriod}
-            className="h-8 w-8 p-0"
-          >
+          <Button variant="outline" size="sm" onClick={handleNextPeriod}>
             <ChevronRight size={16} />
           </Button>
-          <div className="flex items-center bg-muted/50 px-3 py-1 rounded-md">
+          <div className="flex items-center bg-muted/50 px-2 py-1 rounded-md ml-2">
             <Calendar size={16} className="mr-2 text-muted-foreground" />
             <span className="text-sm font-medium">
-              {format(startDate, 'dd/MM/yyyy', { locale: ptBR })} - {format(days[days.length - 1] || startDate, 'dd/MM/yyyy', { locale: ptBR })}
+              {format(days[0], "dd/MM/yyyy", { locale: ptBR })} - {format(days[days.length - 1], "dd/MM/yyyy", { locale: ptBR })}
             </span>
           </div>
         </div>
-        
         <div className="flex items-center gap-2">
           <Select value={filter} onValueChange={(value: 'all' | 'high' | 'medium' | 'low') => setFilter(value)}>
             <SelectTrigger className="w-[130px] h-8">
@@ -222,119 +140,67 @@ const GanttChart: React.FC<GanttChartProps> = ({ tasks, onTaskUpdate }) => {
               <SelectItem value="low">Baixa Prioridade</SelectItem>
             </SelectContent>
           </Select>
-          
-          <Button variant="outline" size="sm" className="h-8">
-            <Settings size={14} className="mr-2" />
-            Configurações
-          </Button>
-          
-          <Button variant="ghost" size="sm" onClick={handleZoomIn} className="h-8 w-8 p-0">
-            <ZoomIn size={16} />
-          </Button>
-          
-          <Button variant="ghost" size="sm" onClick={handleZoomOut} className="h-8 w-8 p-0">
-            <ZoomOut size={16} />
-          </Button>
+          <Button variant="ghost" size="sm" onClick={handleZoomIn}><ZoomIn size={16} /></Button>
+          <Button variant="ghost" size="sm" onClick={handleZoomOut}><ZoomOut size={16} /></Button>
         </div>
       </div>
-      
-      <div className="relative">
-        {/* Header fixed */}
-        <div 
-          className="border-b bg-muted/30 sticky top-0 z-10"
-          style={{ height: HEADER_HEIGHT }}
-        >
-          <div className="flex">
-            <div className="flex-shrink-0 border-r font-medium p-3" style={{ width: '280px' }}>
+      {/* Gantt Table */}
+      <div className="overflow-x-auto w-full pb-2">
+        <div style={{ minWidth: 794 }}>
+          {/* Header */}
+          <div className="flex text-[15px] font-medium bg-neutral-100 border-b" style={{ height: HEADER_HEIGHT }}>
+            <div className="flex-shrink-0 border-r px-4 flex items-center" style={{ width: 230 }}>
               Tarefa
             </div>
-            <div className="flex-shrink-0 border-r font-medium p-3" style={{ width: '120px' }}>
+            <div className="flex-shrink-0 border-r px-3 flex items-center" style={{ width: 120 }}>
               Responsável
             </div>
-            <div className="flex-shrink-0 border-r font-medium p-3" style={{ width: '100px' }}>
+            <div className="flex-shrink-0 border-r px-3 flex items-center" style={{ width: 90 }}>
               Progresso
             </div>
-            <div className="flex-shrink-0 border-r font-medium p-3" style={{ width: '100px' }}>
+            <div className="flex-shrink-0 border-r px-3 flex items-center" style={{ width: 100 }}>
               Tempo Restante
             </div>
-            <div className="flex overflow-hidden">
-              {days.map((day, index) => (
-                <div 
-                  key={index} 
-                  className="flex flex-col justify-center items-center border-r p-1 text-center"
-                  style={{ 
-                    width: TIME_BLOCK_WIDTH * zoomLevel,
-                    minWidth: TIME_BLOCK_WIDTH * zoomLevel 
-                  }}
-                >
-                  <div className="text-xs font-semibold">
-                    {format(day, 'EEE', { locale: ptBR })}
-                  </div>
-                  <div className="text-xs">
-                    {format(day, 'dd/MM')}
-                  </div>
+            <div className="flex" style={{ width: (TIME_BLOCK_WIDTH * zoomLevel) * days.length, minWidth: 580 }}>
+              {days.map((day, idx) => (
+                <div key={idx}
+                  className="text-center border-r px-2"
+                  style={{ width: TIME_BLOCK_WIDTH * zoomLevel, minWidth: TIME_BLOCK_WIDTH * zoomLevel }}>
+                  <div className="text-[11px] font-bold">{format(day, "EE", { locale: ptBR }).toUpperCase()}</div>
+                  <div className="text-[11px]">{format(day, "dd/MM")}</div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-        
-        {/* Scrollable content */}
-        <ScrollArea className="h-[calc(100vh-22rem)]">
-          <div className="min-w-max">
-            {visibleTasks.map((task, index) => (
-              <div 
-                key={task.id} 
-                className={`flex border-b hover:bg-muted/20 ${index % 2 === 0 ? 'bg-muted/10' : ''}`}
-                style={{ height: ROW_HEIGHT }}
-              >
-                <div 
-                  className="flex-shrink-0 border-r p-3 truncate flex items-center"
-                  style={{ width: '280px' }}
-                >
+          {/* Rows */}
+          <div className="relative">
+            {visibleTasks.map((task, idx) => (
+              <div key={task.id}
+                className={`flex border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-neutral-50'}`}
+                style={{ height: ROW_HEIGHT, position: "relative" }}>
+                <div className="flex-shrink-0 border-r px-4 py-2 flex items-center" style={{ width: 230 }}>
                   <div>
-                    <div className="font-medium truncate">{task.title}</div>
-                    <div className="text-xs text-muted-foreground truncate">{task.description || 'Sem descrição'}</div>
+                    <div className="font-medium">{task.title}</div>
+                    <div className="text-xs text-muted-foreground">{task.description || "--"}</div>
                   </div>
                 </div>
-                
-                <div 
-                  className="flex-shrink-0 border-r p-3 truncate flex items-center"
-                  style={{ width: '120px' }}
-                >
-                  <div className="text-sm truncate">{task.assignedTo?.name || '-'}</div>
+                <div className="flex-shrink-0 border-r px-3 flex items-center" style={{ width: 120 }}>
+                  <span className="text-sm">{task.assignedTo?.name || "-"}</span>
                 </div>
-                
-                <div 
-                  className="flex-shrink-0 border-r p-3 flex items-center"
-                  style={{ width: '100px' }}
-                >
-                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full"
-                      style={{ 
-                        width: `${task.completion}%`, 
-                        backgroundColor: task.completion === 100 
-                          ? 'rgb(34, 197, 94)' 
-                          : task.completion > 60 
-                            ? 'rgb(59, 130, 246)' 
-                            : 'rgb(249, 115, 22)' 
-                      }}
-                    />
+                <div className="flex-shrink-0 border-r px-3 flex items-center" style={{ width: 90 }}>
+                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden mr-1">
+                    <div className="h-full rounded-full" style={{
+                      width: `${task.completion}%`,
+                      backgroundColor: task.completion === 100 ? 'rgb(34,197,94)' : 'rgb(59,130,246)'
+                    }} />
                   </div>
-                  <span className="text-xs ml-1">{task.completion}%</span>
+                  <span className="text-xs">{task.completion}%</span>
                 </div>
-                
-                <div 
-                  className="flex-shrink-0 border-r p-3 flex items-center"
-                  style={{ width: '100px' }}
-                >
-                  <div className="text-sm truncate">
-                    {getRemainingTime(task) || '-'}
-                  </div>
+                <div className="flex-shrink-0 border-r px-3 flex items-center" style={{ width: 100 }}>
+                  <span className="text-sm">{getRemainingTime(task) || '-'}</span>
                 </div>
-                
-                <div className="flex-grow relative">
+                {/* Timeline side */}
+                <div className="flex-grow relative" style={{ minWidth: (TIME_BLOCK_WIDTH * zoomLevel) * days.length }}>
                   <div style={getTaskBarStyle(task)}>
                     <span className="text-xs truncate">{task.title}</span>
                   </div>
@@ -342,7 +208,7 @@ const GanttChart: React.FC<GanttChartProps> = ({ tasks, onTaskUpdate }) => {
               </div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
       </div>
     </div>
   );
