@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -820,4 +821,14 @@ const ClientManagement = () => {
                     <span className="text-muted-foreground">Comercial</span>
                     <span className="font-medium">6.8 horas</span>
                   </div>
-                  <div className="
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default ClientManagement;

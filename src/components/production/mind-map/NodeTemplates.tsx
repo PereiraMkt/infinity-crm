@@ -65,7 +65,6 @@ export const useNodeTemplates = () => {
         y: Math.random() * 500,
       },
       style: {
-        // Add style property with a default value
         backgroundColor: template.color
       }
     };
