@@ -28,7 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Palette, Settings, ZoomIn, ZoomOut } from "lucide-react";
+import { Palette, Settings, Type, ZoomIn, ZoomOut } from "lucide-react";
 
 import CustomNode from "./CustomNode";
 import SidebarPanel from "./SidebarPanel";
@@ -103,7 +103,7 @@ function MindMapFlow() {
         borderWidth: defaultBorderWidth,
         borderRadius: defaultBorderRadius,
         fontSize: '14px',
-      }
+      } as React.CSSProperties
     };
 
     setNodes((nds) => nds.concat(newNode));
@@ -139,7 +139,7 @@ function MindMapFlow() {
         borderWidth: defaultBorderWidth,
         borderRadius: defaultBorderRadius,
         fontSize: '14px',
-      }
+      } as React.CSSProperties
     };
 
     setNodes((nds) => nds.concat(newNode));
@@ -284,7 +284,7 @@ function MindMapFlow() {
         borderStyle: defaultBorderStyle,
         borderWidth: defaultBorderWidth,
         borderRadius: defaultBorderRadius,
-      }
+      } as React.CSSProperties
     }));
     
     setNodes(updatedNodes);
@@ -305,17 +305,28 @@ function MindMapFlow() {
     
     const newNode = createTemplateNode(template, nodeHandlers);
     
-    newNode.style = {
-      ...(newNode.style as React.CSSProperties || {}),
-      backgroundColor: template.color || defaultNodeColor,
-      borderColor: defaultBorderColor,
-      color: defaultTextColor,
-      borderStyle: defaultBorderStyle,
-      borderWidth: defaultBorderWidth,
-      borderRadius: defaultBorderRadius,
-    };
+    // Ensure style is properly typed as React.CSSProperties
+    if (newNode.style) {
+      newNode.style = {
+        ...(newNode.style as React.CSSProperties || {}),
+        backgroundColor: template.color || defaultNodeColor,
+        borderColor: defaultBorderColor,
+        color: defaultTextColor,
+        borderStyle: defaultBorderStyle,
+        borderWidth: defaultBorderWidth,
+        borderRadius: defaultBorderRadius,
+      } as React.CSSProperties;
+    }
     
     setNodes((nds) => nds.concat(newNode));
+  };
+
+  // Edit node text directly
+  const handleNodeClick = (event: React.MouseEvent, node: Node) => {
+    // If not a double click (which opens the dialog), enable direct editing
+    if (event.detail === 1) {
+      handleNodeEdit(node.id);
+    }
   };
 
   return (
@@ -345,11 +356,12 @@ function MindMapFlow() {
             snapToGrid={true}
             snapGrid={snapGrid}
             onNodeDoubleClick={handleNodeDoubleClick}
+            onNodeClick={handleNodeClick}
             onEdgeDoubleClick={handleEdgeUpdate}
             fitViewOptions={{ padding: 0.1 }}
             className="bg-secondary/50"
           >
-            <Controls />
+            <Controls showInteractive={false} />
             <MiniMap zoomable pannable nodeClassName="bg-primary" />
             <Background />
             
@@ -379,6 +391,14 @@ function MindMapFlow() {
                   className="bg-white dark:bg-gray-800 shadow-md"
                 >
                   <ZoomOut size={18} />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => fitView({ padding: 0.2 })}
+                  className="bg-white dark:bg-gray-800 shadow-md"
+                >
+                  <Type size={18} />
                 </Button>
               </div>
               
@@ -507,12 +527,6 @@ function MindMapFlow() {
                 </div>
               )}
             </Panel>
-            
-            <MindMapControls
-              onZoomIn={handleZoomIn}
-              onZoomOut={handleZoomOut}
-              onFitView={handleFitView}
-            />
           </ReactFlow>
         </div>
       </div>

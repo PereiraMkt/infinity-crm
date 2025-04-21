@@ -6,9 +6,11 @@ import "reactflow/dist/style.css";
 // Main MindMap component that wraps everything with ReactFlowProvider
 const MindMap = () => {
   return (
-    <ReactFlowProvider>
-      <MindMapFlow />
-    </ReactFlowProvider>
+    <div className="h-[calc(100vh-13rem)] bg-secondary/10 rounded-lg shadow overflow-hidden">
+      <ReactFlowProvider>
+        <MindMapFlow />
+      </ReactFlowProvider>
+    </div>
   );
 };
 

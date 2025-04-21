@@ -44,6 +44,9 @@ const ProductionTabs = ({ columns, setColumns }: ProductionTabsProps) => {
     setColumns(updatedColumns);
   };
 
+  // Determine if we should apply the expanded height class for the document editor
+  const isDocumentTab = activeTab === "documentos";
+
   return (
     <Tabs defaultValue="tarefas" className="w-full h-full" onValueChange={handleTabChange}>
       <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full md:w-fit mb-6 bg-card/80 dark:bg-gray-800/40 backdrop-blur-md shadow-md metallic-item">
@@ -61,7 +64,7 @@ const ProductionTabs = ({ columns, setColumns }: ProductionTabsProps) => {
         <GanttChart tasks={allTasks} onTaskUpdate={handleTaskUpdate} />
       </TabsContent>
       
-      <TabsContent value="documentos" className="mt-0 bg-transparent dark:bg-transparent backdrop-blur-sm shadow-md rounded-lg">
+      <TabsContent value="documentos" className={`mt-0 bg-transparent dark:bg-transparent backdrop-blur-sm shadow-md rounded-lg ${isDocumentTab ? 'h-[calc(100vh-13rem)]' : ''}`}>
         <DocumentEditor />
       </TabsContent>
       

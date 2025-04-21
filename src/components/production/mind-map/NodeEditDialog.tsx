@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -30,27 +31,28 @@ interface NodeEditDialogProps {
 const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) => {
   const [label, setLabel] = useState(node?.data?.label || '');
   const [description, setDescription] = useState(node?.data?.description || '');
-  const [backgroundColor, setBackgroundColor] = useState<string>(node?.style?.backgroundColor || '#ffffff');
-  const [borderColor, setBorderColor] = useState<string>(node?.style?.borderColor || '#000000');
-  const [textColor, setTextColor] = useState<string>(node?.style?.color || '#000000');
-  const [borderStyle, setBorderStyle] = useState<string>(node?.style?.borderStyle || 'solid');
-  const [borderWidth, setBorderWidth] = useState<string>(node?.style?.borderWidth?.toString() || '1px');
-  const [borderRadius, setBorderRadius] = useState<string>(node?.style?.borderRadius?.toString() || '4px');
-  const [fontSize, setFontSize] = useState<string>(node?.style?.fontSize?.toString() || '14px');
+  const [backgroundColor, setBackgroundColor] = useState<string>(node?.style?.backgroundColor as string || '#ffffff');
+  const [borderColor, setBorderColor] = useState<string>(node?.style?.borderColor as string || '#000000');
+  const [textColor, setTextColor] = useState<string>(node?.style?.color as string || '#000000');
+  const [borderStyle, setBorderStyle] = useState<string>(node?.style?.borderStyle as string || 'solid');
+  const [borderWidth, setBorderWidth] = useState<string>(node?.style?.borderWidth as string || '1px');
+  const [borderRadius, setBorderRadius] = useState<string>(node?.style?.borderRadius as string || '4px');
+  const [fontSize, setFontSize] = useState<string>(node?.style?.fontSize as string || '14px');
   const [link, setLink] = useState(node?.data?.link || '');
   const [activeColorPicker, setActiveColorPicker] = useState<'background' | 'border' | 'text' | null>(null);
 
-  React.useEffect(() => {
+  // Reset state when the dialog opens with a new node
+  useEffect(() => {
     if (isOpen && node) {
       setLabel(node.data?.label || '');
       setDescription(node.data?.description || '');
-      setBackgroundColor(node.style?.backgroundColor || '#ffffff');
-      setBorderColor(node.style?.borderColor || '#000000');
-      setTextColor(node.style?.color || '#000000');
-      setBorderStyle(node.style?.borderStyle || 'solid');
-      setBorderWidth(node.style?.borderWidth?.toString() || '1px');
-      setBorderRadius(node.style?.borderRadius?.toString() || '4px');
-      setFontSize(node.style?.fontSize?.toString() || '14px');
+      setBackgroundColor(node.style?.backgroundColor as string || '#ffffff');
+      setBorderColor(node.style?.borderColor as string || '#000000');
+      setTextColor(node.style?.color as string || '#000000');
+      setBorderStyle(node.style?.borderStyle as string || 'solid');
+      setBorderWidth(node.style?.borderWidth as string || '1px');
+      setBorderRadius(node.style?.borderRadius as string || '4px');
+      setFontSize(node.style?.fontSize as string || '14px');
       setLink(node.data?.link || '');
     }
   }, [isOpen, node]);
@@ -218,7 +220,7 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
                         <SelectValue placeholder="Arredondamento" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="0">Sem arredondamento</SelectItem>
+                        <SelectItem value="0px">Sem arredondamento</SelectItem>
                         <SelectItem value="4px">Leve</SelectItem>
                         <SelectItem value="8px">Médio</SelectItem>
                         <SelectItem value="12px">Alto</SelectItem>

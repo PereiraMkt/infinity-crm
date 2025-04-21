@@ -1,5 +1,5 @@
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Handle, Position } from 'reactflow';
 import { Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,13 +19,44 @@ interface CustomNodeProps {
 }
 
 const CustomNode = memo(({ id, data, selected, style }: CustomNodeProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(data.label);
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     data.onNameChange(id, e.target.value);
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
+  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    data.onDescriptionChange(id, e.target.value);
+  };
+
+  const handleEditButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     data.onEdit(id);
+  };
+  
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(true);
+    setEditText(data.label);
+  };
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      data.onNameChange(id, editText);
+      setIsEditing(false);
+    }
+    
+    if (e.key === 'Escape') {
+      setIsEditing(false);
+      setEditText(data.label);
+    }
+  };
+  
+  const handleBlur = () => {
+    data.onNameChange(id, editText);
+    setIsEditing(false);
   };
 
   const openLink = () => {
@@ -43,7 +74,6 @@ const CustomNode = memo(({ id, data, selected, style }: CustomNodeProps) => {
     borderRadius: '4px',
     color: '#000000',
     fontSize: '14px',
-    // Remove the problematic position property
     ...style
   };
 
@@ -52,13 +82,14 @@ const CustomNode = memo(({ id, data, selected, style }: CustomNodeProps) => {
       <div 
         className="px-4 py-2 min-w-[150px] shadow-sm min-h-[50px] flex flex-col items-center justify-center relative"
         style={nodeStyle}
+        onDoubleClick={handleDoubleClick}
       >
         {/* Botão de edição visível em todos os nós */}
         <Button 
           variant="ghost" 
           size="icon" 
           className="absolute -top-6 -right-6 h-8 w-8 bg-white dark:bg-gray-800 rounded-full shadow-sm hover:bg-blue-100 dark:hover:bg-blue-800/40"
-          onClick={handleEdit}
+          onClick={handleEditButtonClick}
         >
           <Edit size={14} />
         </Button>
@@ -71,8 +102,20 @@ const CustomNode = memo(({ id, data, selected, style }: CustomNodeProps) => {
           />
         )}
         
-        <div className="text-center">
-          {data.label}
+        <div className="text-center w-full">
+          {isEditing ? (
+            <input
+              type="text" 
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
+              className="w-full bg-transparent border-b border-dashed border-gray-400 text-center focus:outline-none"
+              autoFocus
+            />
+          ) : (
+            data.label
+          )}
         </div>
         
         {data.description && (
