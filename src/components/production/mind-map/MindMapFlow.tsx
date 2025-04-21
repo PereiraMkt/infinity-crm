@@ -189,19 +189,29 @@ function MindMapFlow() {
 
   // Fixed viewport handling - updated to use correct types
   const handleZoomIn = () => {
-    setViewport((currentViewport: Viewport) => ({
-      zoom: currentViewport.zoom * 1.1,
+    // Get current viewport first
+    const reactFlowInstance = useReactFlow();
+    const currentViewport = reactFlowInstance.getViewport();
+    
+    // Then set the new viewport with updated zoom
+    setViewport({
       x: currentViewport.x,
-      y: currentViewport.y
-    }));
+      y: currentViewport.y,
+      zoom: currentViewport.zoom * 1.1
+    });
   };
 
   const handleZoomOut = () => {
-    setViewport((currentViewport: Viewport) => ({
-      zoom: currentViewport.zoom * 0.9,
+    // Get current viewport first
+    const reactFlowInstance = useReactFlow();
+    const currentViewport = reactFlowInstance.getViewport();
+    
+    // Then set the new viewport with updated zoom
+    setViewport({
       x: currentViewport.x,
-      y: currentViewport.y
-    }));
+      y: currentViewport.y,
+      zoom: currentViewport.zoom * 0.9
+    });
   };
 
   const handleFitView = () => {
