@@ -123,12 +123,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, name: string, isCompany: boolean) => {
     setLoading(true);
     try {
+      // Registrar o usuário
       const result = await registerUser({ name, email, password, isCompany });
       
-      // Login automático após registro
-      const loginResult = await loginUser(email, password);
-      if (loginResult.profile) setProfile(loginResult.profile);
-      if (loginResult.company) setCompany(loginResult.company);
+      // Em vez de tentar fazer login novamente, buscar dados da sessão e perfil
+      if (session) {
+        // Se já estamos com uma sessão (devido ao login automático no registerUser)
+        const userData = await hydrateUser();
+        if (userData.profile) setProfile(userData.profile);
+        if (userData.company) setCompany(userData.company);
+      } else {
+        // Se ainda não temos uma sessão, fazer login explicitamente
+        const loginResult = await loginUser(email, password);
+        if (loginResult.profile) setProfile(loginResult.profile);
+        if (loginResult.company) setCompany(loginResult.company);
+      }
       
       toast.success('Cadastro realizado com sucesso!');
       await new Promise((resolve) => setTimeout(resolve, 1000));

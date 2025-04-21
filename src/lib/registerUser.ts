@@ -17,24 +17,35 @@ export async function registerUser({ name, email, password, isCompany }: Registe
     throw new Error("A senha deve conter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e caracteres especiais.");
   }
 
-  // Etapa 1: criar usuário no Supabase Auth
-  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { name }
-    }
-  });
-  if (signUpError) throw new Error(signUpError.message);
-
-  if (!signUpData?.user) throw new Error("Erro inesperado ao registrar usuário.");
-
-  const userId = signUpData.user.id;
-
   try {
+    // Etapa 1: criar usuário no Supabase Auth
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name }
+      }
+    });
+    if (signUpError) throw new Error(signUpError.message);
+
+    if (!signUpData?.user) throw new Error("Erro inesperado ao registrar usuário.");
+
+    const userId = signUpData.user.id;
+
+    // Importante: Fazer login imediatamente para obter um token válido para operações que exigem autenticação
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    if (signInError) {
+      throw new Error("Erro ao autenticar após registro: " + signInError.message);
+    }
+
     // Etapa 2: criar empresa se for company
     let companyId: string | undefined = undefined;
     if (isCompany) {
+      // Como o usuário agora está autenticado, esta operação deve funcionar com a RLS policy
       const { data: companyInsert, error: companyError } = await supabase
         .from("companies")
         .insert([{ name, email, owner_id: userId }])
@@ -42,6 +53,8 @@ export async function registerUser({ name, email, password, isCompany }: Registe
         .single();
 
       if (companyError) {
+        // Capturar o erro específico para diagnóstico
+        console.error("Erro completo na criação da empresa:", companyError);
         throw new Error("Erro ao criar empresa: " + companyError.message);
       }
 
@@ -55,6 +68,7 @@ export async function registerUser({ name, email, password, isCompany }: Registe
       .eq("id", userId);
 
     if (profileUpdateError) {
+      console.error("Erro completo na atualização do perfil:", profileUpdateError);
       throw new Error("Erro ao atualizar perfil: " + profileUpdateError.message);
     }
 
@@ -63,9 +77,7 @@ export async function registerUser({ name, email, password, isCompany }: Registe
       companyId
     };
   } catch (error: any) {
-    // Se tiver erro, já não vamos tentar fazer rollback do usuário Auth
-    // já que o usuário poderá tentar novamente o fluxo com o mesmo email
-    // e o sistema vai apenas atualizar o profile/company
+    // Exibir erro detalhado no console para diagnóstico
     console.error("Erro no processo de registro:", error);
     throw error;
   }
