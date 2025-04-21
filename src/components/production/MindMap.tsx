@@ -3,12 +3,13 @@ import { ReactFlowProvider } from "reactflow";
 import MindMapFlow from "./mind-map/MindMapFlow";
 import "reactflow/dist/style.css";
 
-// Main MindMap component that wraps everything with ReactFlowProvider
 const MindMap = () => {
   return (
-    <ReactFlowProvider>
-      <MindMapFlow />
-    </ReactFlowProvider>
+    <div className="border rounded-lg overflow-hidden" style={{ height: '842px' }}>
+      <ReactFlowProvider>
+        <MindMapFlow />
+      </ReactFlowProvider>
+    </div>
   );
 };
 

@@ -1,295 +1,118 @@
 
-import { useState, useRef, useCallback } from "react";
-import {
-  ReactFlow,
-  MiniMap,
+import { useState, useCallback } from "react";
+import ReactFlow, {
   Controls,
   Background,
+  BackgroundVariant,
   useNodesState,
   useEdgesState,
   addEdge,
   Node,
   Edge,
-  useReactFlow,
-  NodeChange
+  Connection,
+  MarkerType,
 } from "reactflow";
-import { useToast } from "@/hooks/use-toast";
 import CustomNode from "./CustomNode";
-import SidebarPanel from "./SidebarPanel";
-import { initialNodes, initialEdges, snapGrid } from "./constants";
 import MindMapControls from "./MindMapControls";
-import { NodeDialog, EdgeDialog } from "./NodeDialogs";
-import { useNodeTemplates } from "./NodeTemplates";
+import NodeTemplates from "./NodeTemplates";
+import NodeDialogs from "./NodeDialogs";
+import { initialNodes, initialEdges } from "./constants";
+import SidebarPanel from "./SidebarPanel";
 
-// Main component for mind map flow
-function MindMapFlow() {
-  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+const nodeTypes = {
+  custom: CustomNode,
+};
+
+const MindMapFlow = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const { fitView, addNodes, setViewport, getViewport } = useReactFlow();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [nodeName, setNodeName] = useState("");
-  const [isNodeDialogOpen, setIsNodeDialogOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [isEditingEdge, setIsEditingEdge] = useState(false);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
-  const { toast } = useToast();
-  const { templates, createTemplateNode } = useNodeTemplates();
+  const [isNodeDialogOpen, setIsNodeDialogOpen] = useState(false);
+  const [isEdgeDialogOpen, setIsEdgeDialogOpen] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
-  const nodeTypes = {
-    customNode: CustomNode,
-  };
-  
-  const edgeTypes = {};
-
-  // Connection handlers
-  const onConnect = useCallback((params: any) => {
-    setEdges((eds) => addEdge(params, eds));
+  const onConnect = useCallback((params: Connection) => {
+    const newEdge = {
+      ...params,
+      type: 'smoothstep',
+      animated: false,
+      style: { stroke: '#555', strokeWidth: 2 },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: '#555',
+      },
+    };
+    setEdges((eds) => addEdge(newEdge, eds));
   }, [setEdges]);
 
-  // Node event handlers
-  const onDrop = (event: React.DragEvent) => {
-    event.preventDefault();
-
-    const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
-    const type = event.dataTransfer.getData("application/reactflow");
-
-    if (typeof type === "undefined" || !type || !reactFlowBounds) return;
-
-    const position = {
-      x: event.clientX - reactFlowBounds.left,
-      y: event.clientY - reactFlowBounds.top,
-    };
-
-    const newNode = {
-      id: Date.now().toString(),
-      type,
-      position,
-      data: { 
-        label: `${type} node`,
-        onNameChange: handleNodeNameChange,
-        onDescriptionChange: handleNodeDescriptionChange,
-        onStyleChange: handleNodeStyleChange
-      },
-    };
-
-    setNodes((nds) => nds.concat(newNode));
-  };
-
-  const onDragOver = (event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  };
-
-  // Node management functions
-  const addNode = () => {
-    if (nodeName.trim() === "") return;
-
-    const newNode = {
-      id: Date.now().toString(),
-      type: "customNode",
-      data: { 
-        label: nodeName,
-        onNameChange: handleNodeNameChange,
-        onDescriptionChange: handleNodeDescriptionChange,
-        onStyleChange: handleNodeStyleChange
-      },
-      position: {
-        x: Math.random() * 500,
-        y: Math.random() * 500,
-      },
-    };
-
-    setNodes((nds) => nds.concat(newNode));
-    setNodeName("");
-    toast({
-      title: "Nó adicionado",
-      description: `Nó "${nodeName}" criado com sucesso.`,
-    });
-  };
-
-  // Node property change handlers
-  const handleNodeNameChange = (id: string, newName: string) => {
-    setNodes(nodes.map(node => 
-      node.id === id 
-        ? { ...node, data: { ...node.data, label: newName } } 
-        : node
-    ));
-  };
-
-  const handleNodeDescriptionChange = (id: string, description: string) => {
-    setNodes(nodes.map(node => 
-      node.id === id 
-        ? { ...node, data: { ...node.data, description } } 
-        : node
-    ));
-  };
-
-  const handleNodeStyleChange = (id: string, styleProps: any) => {
-    setNodes(nodes.map(node => 
-      node.id === id 
-        ? { ...node, data: { ...node.data, ...styleProps } } 
-        : node
-    ));
-  };
-
-  // Node interaction handlers
-  const handleNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
+  const onNodeClick = (_: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
     setIsNodeDialogOpen(true);
   };
 
-  const handleNodeDelete = () => {
-    if (!selectedNode) return;
-
-    setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
-    setIsNodeDialogOpen(false);
-    setSelectedNode(null);
-    toast({
-      title: "Nó removido",
-      description: "O nó foi removido com sucesso.",
-    });
-  };
-
-  // Edge handlers
-  const handleEdgeUpdate = (event: React.MouseEvent, edge: Edge) => {
+  const onEdgeClick = (_: React.MouseEvent, edge: Edge) => {
     setSelectedEdge(edge);
-    setIsEditingEdge(true);
+    setIsEdgeDialogOpen(true);
   };
 
-  const handleEdgeDelete = () => {
-    if (!selectedEdge) return;
-
-    setEdges((edges) => edges.filter((edge) => edge.id !== selectedEdge.id));
-    setIsEditingEdge(false);
-    setSelectedEdge(null);
-    toast({
-      title: "Conexão removida",
-      description: "A conexão foi removida com sucesso.",
-    });
-  };
-
-  const handleEdgeUpdateConfirm = (source: string, target: string) => {
-    if (!selectedEdge) return;
-
-    const updatedEdge = {
-      ...selectedEdge,
-      source,
-      target,
-    };
-
-    setEdges((edges) =>
-      edges.map((edge) => (edge.id === selectedEdge.id ? updatedEdge : edge))
-    );
-    setIsEditingEdge(false);
-    setSelectedEdge(null);
-    toast({
-      title: "Conexão atualizada",
-      description: "A conexão foi atualizada com sucesso.",
-    });
-  };
-
-  // Viewport control functions
-  const handleZoomIn = () => {
-    const currentViewport = getViewport();
-    setViewport({
-      x: currentViewport.x,
-      y: currentViewport.y,
-      zoom: currentViewport.zoom * 1.1
-    });
-  };
-
-  const handleZoomOut = () => {
-    const currentViewport = getViewport();
-    setViewport({
-      x: currentViewport.x,
-      y: currentViewport.y,
-      zoom: currentViewport.zoom * 0.9
-    });
-  };
-
-  const handleFitView = () => {
-    fitView({ padding: 0.2 });
-  };
-
-  const onNodesChangeCustom = (changes: NodeChange[]) => {
-    onNodesChange(changes);
-  };
-
-  // Template node function
-  const addTemplateNode = (template: any) => {
-    const nodeHandlers = { 
-      onNameChange: handleNodeNameChange,
-      onDescriptionChange: handleNodeDescriptionChange,
-      onStyleChange: handleNodeStyleChange
+  const handleAddNode = (nodeType: string) => {
+    const position = { x: 100, y: 100 };
+    
+    const newNode: Node = {
+      id: `node-${nodes.length + 1}`,
+      type: 'custom',
+      position,
+      data: { 
+        label: `New ${nodeType}`,
+        type: nodeType,
+      },
     };
     
-    const newNode = createTemplateNode(template, nodeHandlers);
-    setNodes((nds) => nds.concat(newNode));
+    setNodes([...nodes, newNode]);
+    setSelectedNode(newNode);
+    setIsNodeDialogOpen(true);
+    setShowTemplates(false);
   };
 
   return (
-    <div className="h-[calc(100vh-13rem)] flex">
-      <SidebarPanel 
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        nodeName={nodeName}
-        setNodeName={setNodeName}
-        onAddNode={addNode}
-        templates={templates}
-        onAddTemplate={addTemplateNode}
-      />
-
-      {/* Mind Map */}
-      <div className="flex-1">
-        <div className="h-full" ref={reactFlowWrapper}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChangeCustom}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            snapToGrid={true}
-            snapGrid={snapGrid}
-            onNodeDoubleClick={handleNodeDoubleClick}
-            onEdgeDoubleClick={handleEdgeUpdate}
-            fitViewOptions={{ padding: 0.1 }}
-            className="bg-secondary/50"
-          >
-            <Controls />
-            <MiniMap />
-            <Background />
-            <MindMapControls
-              onZoomIn={handleZoomIn}
-              onZoomOut={handleZoomOut}
-              onFitView={handleFitView}
-            />
-          </ReactFlow>
-        </div>
+    <div className="w-full h-full flex" style={{ height: '842px' }}> {/* A4 height */}
+      <div className="w-full h-full relative">
+        <ReactFlow
+          nodes={nodes}
+          nodeTypes={nodeTypes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={onNodeClick}
+          onEdgeClick={onEdgeClick}
+          fitView
+          snapToGrid
+          snapGrid={[15, 15]}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+        >
+          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          <Controls />
+          <MindMapControls onAddNode={() => setShowTemplates(!showTemplates)} />
+          {showTemplates && (
+            <NodeTemplates onSelectTemplate={handleAddNode} />
+          )}
+        </ReactFlow>
+        
+        <NodeDialogs
+          selectedNode={selectedNode}
+          selectedEdge={selectedEdge}
+          isNodeDialogOpen={isNodeDialogOpen}
+          isEdgeDialogOpen={isEdgeDialogOpen}
+          setIsNodeDialogOpen={setIsNodeDialogOpen}
+          setIsEdgeDialogOpen={setIsEdgeDialogOpen}
+          setNodes={setNodes}
+          setEdges={setEdges}
+        />
       </div>
-
-      {/* Node Delete Dialog */}
-      <NodeDialog 
-        isOpen={isNodeDialogOpen}
-        onOpenChange={setIsNodeDialogOpen}
-        selectedNode={selectedNode}
-        onDelete={handleNodeDelete}
-      />
-
-      {/* Edge Edit Dialog */}
-      <EdgeDialog 
-        isOpen={isEditingEdge}
-        edge={selectedEdge}
-        onClose={() => setIsEditingEdge(false)}
-        onUpdate={handleEdgeUpdateConfirm}
-        onDelete={handleEdgeDelete}
-      />
     </div>
   );
-}
+};
 
 export default MindMapFlow;
