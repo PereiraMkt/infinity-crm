@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -88,10 +87,9 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
 
   if (!node) return null;
 
-  // Fixed type casting for string values
-  const borderWidthString = String(borderWidth);
-  const borderRadiusString = String(borderRadius);
-  const fontSizeString = String(fontSize);
+  const borderWidthString = typeof borderWidth === 'number' ? `${borderWidth}px` : String(borderWidth);
+  const borderRadiusString = typeof borderRadius === 'number' ? `${borderRadius}px` : String(borderRadius);
+  const fontSizeString = typeof fontSize === 'number' ? `${fontSize}px` : String(fontSize);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -136,7 +134,6 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
             />
           </div>
           
-          {/* Color and styling section */}
           <div className="border-t pt-4 mt-2">
             <h3 className="font-medium mb-4">Estilo e Cores</h3>
             
@@ -254,7 +251,6 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
             </div>
           </div>
           
-          {/* Preview section */}
           <div className="mt-4">
             <Label className="mb-2 block">Pré-visualização</Label>
             <div 

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { FunnelHeader } from "@/components/sales-funnel/FunnelHeader";
 import { FunnelAnalytics } from "@/components/sales-funnel/FunnelAnalytics";
@@ -14,11 +13,11 @@ const SalesFunnel = () => {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   
-  // Mock data with correct assignedTo property structure
+  // Mock data with correct assignedTo property structure and adding required completion field
   const mockKanbanColumns: KanbanColumnItem[] = [
     {
       id: "prospecting",
-      title: "Prospecção",
+      title: "Prospecç��o",
       color: "bg-gray-200 dark:bg-gray-700",
       cards: [
         {
@@ -26,6 +25,7 @@ const SalesFunnel = () => {
           title: "Empresa ABC",
           description: "Interessados em CRM para equipe de vendas",
           value: 5000,
+          completion: 0,
           assignedTo: {
             id: "user-1",
             name: "Carlos Silva",
@@ -42,6 +42,7 @@ const SalesFunnel = () => {
           title: "Startup XYZ",
           description: "Procurando solução de automação de marketing",
           value: 3500,
+          completion: 0,
           assignedTo: {
             id: "user-2",
             name: "Ana Oliveira",
@@ -65,6 +66,7 @@ const SalesFunnel = () => {
           title: "Consultoria 123",
           description: "Precisam de sistema para gestão de projetos",
           value: 7500,
+          completion: 25,
           assignedTo: {
             id: "user-3",
             name: "Pedro Santos",
@@ -88,6 +90,7 @@ const SalesFunnel = () => {
           title: "Tech Solutions",
           description: "Avaliando proposta de consultoria de TI",
           value: 12000,
+          completion: 50,
           assignedTo: {
             id: "user-4",
             name: "Mariana Costa",
@@ -111,6 +114,7 @@ const SalesFunnel = () => {
           title: "Global Corp",
           description: "Fechando detalhes do contrato anual",
           value: 48000,
+          completion: 75,
           assignedTo: {
             id: "user-5",
             name: "Rafael Almeida",
@@ -134,6 +138,7 @@ const SalesFunnel = () => {
           title: "Mega Industries",
           description: "Contrato de suporte técnico assinado",
           value: 24000,
+          completion: 100,
           assignedTo: {
             id: "user-6",
             name: "Juliana Lima",
