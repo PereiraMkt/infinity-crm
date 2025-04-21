@@ -109,7 +109,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(true);
     try {
       console.log("Iniciando tentativa de login...");
-      const result = await loginUser(email, password);
+      
+      // Validar senha
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+      if (!passwordRegex.test(password)) {
+        throw new Error("A senha deve conter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e caracteres especiais.");
+      }
+      
+      await loginUser(email, password);
       
       // Login bem-sucedido, buscar perfil e empresa
       try {

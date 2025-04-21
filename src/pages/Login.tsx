@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { ArrowLeft, LogIn } from 'lucide-react';
+import { ArrowLeft, LogIn, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,10 +11,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import LoadingScreen from '@/components/ui/loading-screen';
+
+const passwordRules = "Ao menos 8 caracteres, letras maiúsculas, minúsculas, número e caractere especial";
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
+  password: z.string()
+    .min(8, "A senha deve conter pelo menos 8 caracteres")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/, passwordRules)
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -21,15 +27,11 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const { signIn, user, loading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Loader visual durante o login
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-black text-white">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
-        <span className="ml-6 text-lg">Entrando no Infinity CRM...</span>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   const form = useForm<LoginFormValues>({
@@ -122,15 +124,25 @@ const Login = () => {
                           </Link>
                         </div>
                         <FormControl>
-                          <Input 
-                            placeholder="••••••••" 
-                            type="password" 
-                            required 
-                            {...field} 
-                            className="bg-black/60 border-white/10 text-white placeholder:text-white/50"
-                          />
+                          <div className="relative">
+                            <Input 
+                              placeholder="••••••••" 
+                              type={showPassword ? "text" : "password"}
+                              required 
+                              {...field} 
+                              className="bg-black/60 border-white/10 text-white placeholder:text-white/50 pr-10"
+                            />
+                            <button 
+                              type="button" 
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white"
+                            >
+                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
                         </FormControl>
                         <FormMessage />
+                        <p className="text-xs text-white/50 mt-1">{passwordRules}</p>
                       </FormItem>
                     )}
                   />
@@ -142,7 +154,13 @@ const Login = () => {
                   >
                     <span className="relative z-10 flex items-center">
                       {isSubmitting ? (
-                        <>Entrando...</>
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Entrando...
+                        </span>
                       ) : (
                         <>
                           <LogIn className="mr-2 h-4 w-4" />
