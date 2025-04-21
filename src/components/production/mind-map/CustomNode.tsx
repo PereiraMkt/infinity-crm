@@ -13,9 +13,10 @@ interface CustomNodeProps {
     onEdit: (id: string) => void;
   };
   selected: boolean;
+  style?: React.CSSProperties;
 }
 
-const CustomNode = memo(({ id, data, selected }: CustomNodeProps) => {
+const CustomNode = memo(({ id, data, selected, style }: CustomNodeProps) => {
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     data.onNameChange(id, e.target.value);
   };
@@ -30,10 +31,23 @@ const CustomNode = memo(({ id, data, selected }: CustomNodeProps) => {
     }
   };
 
+  // Default styles if none provided
+  const nodeStyle = {
+    backgroundColor: '#ffffff',
+    borderColor: '#000000',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderRadius: '4px',
+    color: '#000000',
+    fontSize: '14px',
+    ...style
+  };
+
   return (
     <>
       <div 
         className="px-4 py-2 min-w-[150px] shadow-sm min-h-[50px] flex flex-col items-center justify-center relative"
+        style={nodeStyle}
         onDoubleClick={handleEdit}
       >
         {data.link && (
