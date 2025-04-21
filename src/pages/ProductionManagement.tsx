@@ -7,6 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Filter, Download, Plus, RefreshCw } from "lucide-react";
 import { useModuleSync } from "@/services/moduleSyncService";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ProductionManagement = () => {
   // Updated mock data with id field in assignedTo
@@ -107,6 +125,16 @@ const ProductionManagement = () => {
   ];
 
   const [columns, setColumns] = useState<KanbanColumnItem[]>(mockTasksKanbanColumns);
+  const [isNewTaskDialogOpen, setIsNewTaskDialogOpen] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    client: "",
+    priority: "medium",
+    startDate: "",
+    endDate: "",
+    assignee: "user-1"
+  });
   const { syncAllModules, isSyncing } = useModuleSync();
   const { toast } = useToast();
 
@@ -115,6 +143,74 @@ const ProductionManagement = () => {
     toast({
       title: "Sincronização iniciada",
       description: "Sincronizando dados entre todos os módulos...",
+    });
+  };
+  
+  const handleNewTaskChange = (field: string, value: string) => {
+    setNewTask({
+      ...newTask,
+      [field]: value
+    });
+  };
+  
+  const handleCreateTask = () => {
+    if (!newTask.title) {
+      toast({
+        title: "Erro",
+        description: "O título da tarefa é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const users = [
+      { id: "user-1", name: "Carlos Silva", avatar: "/placeholder.svg" },
+      { id: "user-2", name: "Ana Oliveira", avatar: "/placeholder.svg" },
+      { id: "user-3", name: "Miguel Santos", avatar: "/placeholder.svg" },
+      { id: "user-4", name: "Julia Costa", avatar: "/placeholder.svg" },
+      { id: "user-5", name: "Roberto Alves", avatar: "/placeholder.svg" }
+    ];
+    
+    const assignedUser = users.find(user => user.id === newTask.assignee) || users[0];
+    
+    const newTaskItem = {
+      id: `task-${Date.now()}`,
+      title: newTask.title,
+      description: newTask.description,
+      client: newTask.client,
+      assignedTo: assignedUser,
+      priority: newTask.priority,
+      completion: 0,
+      startDate: new Date(newTask.startDate || new Date()),
+      endDate: new Date(newTask.endDate || new Date()),
+    };
+    
+    // Add to backlog column
+    const updatedColumns = columns.map(column => {
+      if (column.id === "backlog") {
+        return {
+          ...column,
+          cards: [...column.cards, newTaskItem]
+        };
+      }
+      return column;
+    });
+    
+    setColumns(updatedColumns);
+    setIsNewTaskDialogOpen(false);
+    setNewTask({
+      title: "",
+      description: "",
+      client: "",
+      priority: "medium",
+      startDate: "",
+      endDate: "",
+      assignee: "user-1"
+    });
+    
+    toast({
+      title: "Tarefa criada",
+      description: "A tarefa foi adicionada ao backlog"
     });
   };
 
@@ -143,7 +239,11 @@ const ProductionManagement = () => {
               <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
               <span className="text-xs">{isSyncing ? "Sincronizando..." : "Sincronizar"}</span>
             </Button>
-            <Button size="sm" className="flex items-center gap-1 h-8">
+            <Button 
+              size="sm" 
+              className="flex items-center gap-1 h-8"
+              onClick={() => setIsNewTaskDialogOpen(true)}
+            >
               <Plus size={14} />
               <span className="text-xs">Nova Tarefa</span>
             </Button>
@@ -152,6 +252,112 @@ const ProductionManagement = () => {
       </Card>
       
       <ProductionTabs columns={columns} setColumns={setColumns} />
+      
+      <Dialog open={isNewTaskDialogOpen} onOpenChange={setIsNewTaskDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Nova Tarefa</DialogTitle>
+            <DialogDescription>
+              Crie uma nova tarefa para adicionar ao kanban e gráfico Gantt
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Título</Label>
+              <Input 
+                id="title"
+                value={newTask.title}
+                onChange={(e) => handleNewTaskChange("title", e.target.value)}
+                placeholder="Título da tarefa"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea 
+                id="description"
+                value={newTask.description}
+                onChange={(e) => handleNewTaskChange("description", e.target.value)}
+                placeholder="Descrição detalhada da tarefa"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="client">Cliente</Label>
+                <Input 
+                  id="client"
+                  value={newTask.client}
+                  onChange={(e) => handleNewTaskChange("client", e.target.value)}
+                  placeholder="Nome do cliente"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="priority">Prioridade</Label>
+                <Select 
+                  value={newTask.priority} 
+                  onValueChange={(value) => handleNewTaskChange("priority", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a prioridade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Baixa</SelectItem>
+                    <SelectItem value="medium">Média</SelectItem>
+                    <SelectItem value="high">Alta</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="startDate">Data de Início</Label>
+                <Input 
+                  id="startDate"
+                  type="date"
+                  value={newTask.startDate}
+                  onChange={(e) => handleNewTaskChange("startDate", e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="endDate">Data de Término</Label>
+                <Input 
+                  id="endDate"
+                  type="date"
+                  value={newTask.endDate}
+                  onChange={(e) => handleNewTaskChange("endDate", e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="assignee">Responsável</Label>
+              <Select 
+                value={newTask.assignee} 
+                onValueChange={(value) => handleNewTaskChange("assignee", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user-1">Carlos Silva</SelectItem>
+                  <SelectItem value="user-2">Ana Oliveira</SelectItem>
+                  <SelectItem value="user-3">Miguel Santos</SelectItem>
+                  <SelectItem value="user-4">Julia Costa</SelectItem>
+                  <SelectItem value="user-5">Roberto Alves</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewTaskDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleCreateTask}>Criar Tarefa</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

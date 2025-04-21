@@ -16,8 +16,8 @@ const DocumentContent: React.FC<DocumentContentProps> = ({
 }) => {
   const [content, setContent] = useState<string>(initialContent);
   const [fontFamily, setFontFamily] = useState<string>('"Inter", sans-serif');
-  const [textColor, setTextColor] = useState<string>("#000000");
-  const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
+  const [textColor, setTextColor] = useState<string>("#ffffff");
+  const [backgroundColor, setBackgroundColor] = useState<string>("#1A1F2C");
   const [textAlignment, setTextAlignment] = useState<string>("left");
   const [lineHeight, setLineHeight] = useState<string>("1.5");
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
@@ -71,13 +71,13 @@ const DocumentContent: React.FC<DocumentContentProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full border rounded-md overflow-hidden bg-white dark:bg-gray-800">
-      <div className="p-3 border-b flex justify-between items-center">
+    <div className="flex flex-col h-full border rounded-md overflow-hidden bg-[#1A1F2C] dark:bg-[#1A1F2C]">
+      <div className="p-3 border-b border-gray-700 flex justify-between items-center bg-gray-800 dark:bg-gray-800">
         <input
           type="text"
           value={documentTitle}
           onChange={(e) => setDocumentTitle(e.target.value)}
-          className="bg-transparent border-none font-medium text-lg focus:outline-none focus:ring-0 w-full"
+          className="bg-transparent border-none font-medium text-lg focus:outline-none focus:ring-0 w-full text-white"
         />
         <div className="flex items-center gap-2">
           <FormatToolbar

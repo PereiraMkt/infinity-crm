@@ -1,5 +1,6 @@
 
 import React, { useEffect, forwardRef, useRef, useState } from "react";
+import FloatingFormatToolbar from "./toolbar/FloatingFormatToolbar";
 
 interface EditorContentProps {
   content: string;
@@ -20,6 +21,9 @@ const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(({
 }, ref) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+  const [showFormatToolbar, setShowFormatToolbar] = useState(false);
+  const [formatToolbarPosition, setFormatToolbarPosition] = useState({ top: 0, left: 0 });
   
   // Set up the editor on component mount
   useEffect(() => {
@@ -37,6 +41,36 @@ const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(({
     }
   }, []);
   
+  // Handle selection changes to show format toolbar
+  const handleSelectionChange = () => {
+    const selection = window.getSelection();
+    if (selection && selection.toString() && isFocused) {
+      setSelectedText(selection.toString());
+      
+      // Calculate position for the toolbar
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      if (rect.width > 0) {
+        setFormatToolbarPosition({
+          top: rect.top - 50, // Position above the selection
+          left: rect.left + (rect.width / 2) // Center horizontally
+        });
+        setShowFormatToolbar(true);
+      }
+    } else {
+      setSelectedText("");
+      setShowFormatToolbar(false);
+    }
+  };
+  
+  useEffect(() => {
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => {
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
+  }, [isFocused]);
+
   // Handle mouse events for cursor
   const handleMouseDown = (e: React.MouseEvent) => {
     if (editorRef.current && e.currentTarget === e.target) {
@@ -82,37 +116,58 @@ const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(({
     e.preventDefault();
   };
 
+  const handleFormatAction = (action: string, value?: string) => {
+    document.execCommand(action, false, value);
+  };
+
   return (
-    <div
-      className="w-full h-full p-8 outline-none overflow-auto notion-content"
-      contentEditable={true}
-      ref={(node) => {
-        // Merge refs
-        if (typeof ref === 'function') {
-          ref(node);
-        } else if (ref) {
-          ref.current = node;
-        }
-        editorRef.current = node;
-      }}
-      onInput={handleInput}
-      onPaste={handlePaste}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onMouseDown={handleMouseDown}
-      onFocus={() => setIsFocused(true)}
-      onBlur={() => setIsFocused(false)}
-      style={{
-        fontFamily,
-        color: textColor,
-        backgroundColor,
-        textAlign: textAlignment as "left" | "center" | "right" | "justify",
-        position: "relative",
-        minHeight: "100%",
-      }}
-      suppressContentEditableWarning
-      spellCheck
-    />
+    <div className="relative w-full h-full">
+      <div
+        className="w-full h-full p-8 outline-none overflow-auto notion-content"
+        contentEditable={true}
+        ref={(node) => {
+          // Merge refs
+          if (typeof ref === 'function') {
+            ref(node);
+          } else if (ref) {
+            ref.current = node;
+          }
+          editorRef.current = node;
+        }}
+        onInput={handleInput}
+        onPaste={handlePaste}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onMouseDown={handleMouseDown}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => {
+          setIsFocused(false);
+          // Delay hiding the toolbar to allow clicking on it
+          setTimeout(() => {
+            if (!document.activeElement?.closest('.floating-format-toolbar')) {
+              setShowFormatToolbar(false);
+            }
+          }, 100);
+        }}
+        style={{
+          fontFamily,
+          color: textColor,
+          backgroundColor,
+          textAlign: textAlignment as "left" | "center" | "right" | "justify",
+          position: "relative",
+          minHeight: "100%",
+        }}
+        suppressContentEditableWarning
+        spellCheck
+      />
+      
+      {showFormatToolbar && (
+        <FloatingFormatToolbar 
+          position={formatToolbarPosition}
+          onFormatAction={handleFormatAction}
+        />
+      )}
+    </div>
   );
 });
 

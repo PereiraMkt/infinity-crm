@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import ReactFlow, {
   Controls,
@@ -20,6 +19,7 @@ import { initialNodes, initialEdges } from "./constants";
 import SidebarPanel from "./SidebarPanel";
 import NodeDialog from "./NodeDialog";
 import EdgeDialog from "./EdgeDialog";
+import NodeDialogs from "./NodeDialogs";
 
 const nodeTypes = {
   custom: CustomNode,
@@ -62,23 +62,28 @@ const MindMapFlow = () => {
     setIsEdgeDialogOpen(true);
   };
 
-  const handleAddNode = (nodeType: string) => {
-    const position = { x: 100, y: 100 };
+  const handleAddNode = () => {
+    const position = reactFlowInstance.project({
+      x: window.innerWidth / 2 - 100,
+      y: window.innerHeight / 2 - 100
+    });
     
     const newNode: Node = {
-      id: `node-${nodes.length + 1}`,
+      id: `node-${Date.now()}`,
       type: 'custom',
       position,
       data: { 
-        label: `New ${nodeType}`,
-        type: nodeType,
+        label: 'New Node',
+        backgroundColor: '#8B5CF6',
+        textColor: '#FFFFFF',
+        borderColor: '#6D28D9',
+        shape: 'roundedRect',
       },
     };
     
     setNodes([...nodes, newNode]);
     setSelectedNode(newNode);
     setIsNodeDialogOpen(true);
-    setShowTemplates(false);
   };
 
   const handleDeleteNode = () => {
@@ -134,7 +139,13 @@ const MindMapFlow = () => {
               id: `node-${Date.now()}`,
               type: 'custom',
               position: { x: 100, y: 100 },
-              data: { label: nodeName },
+              data: { 
+                label: nodeName,
+                backgroundColor: '#8B5CF6',
+                textColor: '#FFFFFF',
+                borderColor: '#6D28D9',
+                shape: 'roundedRect',
+              },
             };
             setNodes([...nodes, newNode]);
             setNodeName("");
@@ -163,7 +174,8 @@ const MindMapFlow = () => {
           <MindMapControls 
             onZoomIn={handleZoomIn} 
             onZoomOut={handleZoomOut} 
-            onFitView={handleFitView} 
+            onFitView={handleFitView}
+            onAddNode={handleAddNode}
           />
           {showTemplates && (
             <NodeTemplates 
@@ -173,19 +185,15 @@ const MindMapFlow = () => {
           )}
         </ReactFlow>
         
-        <NodeDialog
-          isOpen={isNodeDialogOpen}
-          onOpenChange={setIsNodeDialogOpen}
+        <NodeDialogs
           selectedNode={selectedNode}
-          onDelete={handleDeleteNode}
-        />
-        
-        <EdgeDialog
-          isOpen={isEdgeDialogOpen}
-          edge={selectedEdge}
-          onClose={() => setIsEdgeDialogOpen(false)}
-          onUpdate={handleUpdateEdge}
-          onDelete={handleDeleteEdge}
+          selectedEdge={selectedEdge}
+          isNodeDialogOpen={isNodeDialogOpen}
+          isEdgeDialogOpen={isEdgeDialogOpen}
+          setIsNodeDialogOpen={setIsNodeDialogOpen}
+          setIsEdgeDialogOpen={setIsEdgeDialogOpen}
+          setNodes={setNodes}
+          setEdges={setEdges}
         />
       </div>
     </div>

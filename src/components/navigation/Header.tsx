@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Bell, Menu } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/auth/UserMenu";
 import ThemeToggle from "@/components/theme/ThemeToggle";
@@ -24,9 +24,11 @@ const moduleNames: Record<string, string> = {
 
 interface HeaderProps {
   openSidebar: () => void;
+  isSidebarOpen: boolean;
+  toggleSidebar: () => void;
 }
 
-const Header = ({ openSidebar }: HeaderProps) => {
+const Header = ({ openSidebar, isSidebarOpen, toggleSidebar }: HeaderProps) => {
   const location = useLocation();
   const [moduleName, setModuleName] = useState("");
   const isMobile = useIsMobile();
@@ -43,17 +45,15 @@ const Header = ({ openSidebar }: HeaderProps) => {
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center px-4 md:px-6">
-        {isMobile && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2"
-            onClick={openSidebar}
-          >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle Menu</span>
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mr-2"
+          onClick={toggleSidebar}
+        >
+          {isSidebarOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+          <span className="sr-only">Toggle Sidebar</span>
+        </Button>
         
         <div className="flex-1">
           <h1 className="text-xl font-semibold">{moduleName}</h1>

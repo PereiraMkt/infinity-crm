@@ -11,6 +11,7 @@ import {
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import ChatContent from "./ChatContent";
 import WhatsAppChat from "../whatsapp/WhatsAppChat";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FloatingPanelProps {
   isOpen: boolean;
@@ -33,11 +34,14 @@ const FloatingPanel = ({
   onClose,
   onFullScreen,
 }: FloatingPanelProps) => {
+  const isMobile = useIsMobile();
+  
   if (!isOpen) return null;
 
-  // Reduce the size to approximately 70% of the original
-  const adjustedWidth = Math.round(chatWidth * 0.7);
-  const adjustedHeight = Math.round(chatHeight * 0.7);
+  // Reduce size for mobile devices
+  const sizeMultiplier = isMobile ? 0.7 : 1;
+  const adjustedWidth = Math.round(chatWidth * sizeMultiplier);
+  const adjustedHeight = Math.round(chatHeight * sizeMultiplier);
 
   return (
     <ResizablePanelGroup
@@ -90,7 +94,7 @@ const FloatingPanel = ({
             
             <TabsContent value="contacts" className="flex-1 flex flex-col p-0 mt-0 overflow-hidden">
               <div className="p-4 text-center text-sm text-muted-foreground h-full flex items-center justify-center">
-                Contatos externos para os membros da empresa
+                Contatos externos (clientes, fornecedores e parceiros)
               </div>
             </TabsContent>
             
