@@ -47,17 +47,25 @@ const MainLayout = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex dark:bg-gray-900 bg-gray-50 transition-colors duration-300 w-full">
-        {/* Sidebar - Responsive */}
-        <Sidebar 
-          open={sidebarOpen} 
-          setOpen={setSidebarOpen} 
-        />
+        {/* Sidebar - Fixed and scrollable independently */}
+        <aside className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-0'}`}>
+          <div className="h-full overflow-y-auto no-scrollbar">
+            <Sidebar 
+              open={sidebarOpen} 
+              setOpen={setSidebarOpen} 
+            />
+          </div>
+        </aside>
 
-        {/* Main content area */}
-        <div className="flex flex-col flex-1 w-full overflow-hidden">
-          <TopNav onMenuButtonClick={() => setSidebarOpen(!sidebarOpen)} />
+        {/* Main content area with top padding for the header */}
+        <div className={`flex flex-col flex-1 min-h-screen transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
+          {/* Fixed Top Nav */}
+          <TopNav 
+            onMenuButtonClick={() => setSidebarOpen(!sidebarOpen)} 
+            className="fixed top-0 z-30 w-full bg-background/80 backdrop-blur-sm shadow-sm border-b"
+          />
 
-          <main className="flex-1 overflow-auto bg-background p-4 md:p-6">
+          <main className="flex-1 overflow-auto bg-background p-4 md:p-6 mt-16"> {/* Add top margin to accommodate fixed header */}
             <ErrorBoundary
               fallback={
                 <div className="p-6 bg-destructive/10 rounded-lg">

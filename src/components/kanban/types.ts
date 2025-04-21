@@ -37,6 +37,20 @@ export interface KanbanCardItem {
     [key: string]: string;
   };
   dueDate?: string;
+  socialMedia?: Array<{
+    type: string;
+    url: string;
+  }>;
+  responsible?: string;
+  tasks?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    completed: boolean;
+    dueDate?: string;
+    estimatedTime?: number;
+    timeSpent?: number;
+  }>;
 }
 
 export interface KanbanColumnItem {

@@ -22,7 +22,7 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
   return (
     <ScrollArea className="h-full">
       <div 
-        className="p-6 bg-white/80 dark:bg-gray-800/80 min-h-[500px] prose dark:prose-invert max-w-none" 
+        className="prose dark:prose-invert max-w-none" 
         style={{ 
           fontFamily,
           color: textColor !== 'default' ? textColor : undefined,
@@ -30,8 +30,8 @@ const PreviewContent: React.FC<PreviewContentProps> = ({
           textAlign: textAlignment as any,
           lineHeight
         }}
+        dangerouslySetInnerHTML={{ __html: content }}
       >
-        {content || <p className="text-gray-400 dark:text-gray-500">Nenhum conteúdo para visualizar</p>}
       </div>
     </ScrollArea>
   );

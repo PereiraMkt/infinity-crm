@@ -3,15 +3,11 @@ import React from "react";
 import { MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import ChatFullScreenDialog from "../chat/ChatFullScreenDialog";
-import FloatingPanel from "../chat/FloatingPanel";
+import FloatingPanel from "@/components/chat/FloatingPanel";
+import ChatFullScreenDialog from "@/components/chat/ChatFullScreenDialog";
 import { useFloatingAction } from "@/hooks/use-floating-action";
 
-interface UnifiedChatButtonProps {
-  defaultOpen?: boolean;
-}
-
-const UnifiedChatButton = ({ defaultOpen = false }: UnifiedChatButtonProps) => {
+const UnifiedChatButton = () => {
   const { toast } = useToast();
   const {
     isOpen,
@@ -24,7 +20,7 @@ const UnifiedChatButton = ({ defaultOpen = false }: UnifiedChatButtonProps) => {
     toggleOpen,
     toggleFullScreen,
     handleResizing
-  } = useFloatingAction({ defaultOpen });
+  } = useFloatingAction({ defaultOpen: false });
 
   return (
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end">

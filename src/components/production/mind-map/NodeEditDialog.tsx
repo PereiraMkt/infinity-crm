@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -30,13 +31,13 @@ interface NodeEditDialogProps {
 const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) => {
   const [label, setLabel] = useState(node?.data?.label || '');
   const [description, setDescription] = useState(node?.data?.description || '');
-  const [backgroundColor, setBackgroundColor] = useState(node?.style?.backgroundColor || '#ffffff');
-  const [borderColor, setBorderColor] = useState(node?.style?.borderColor || '#000000');
-  const [textColor, setTextColor] = useState(node?.style?.color || '#000000');
-  const [borderStyle, setBorderStyle] = useState(node?.style?.borderStyle || 'solid');
-  const [borderWidth, setBorderWidth] = useState(node?.style?.borderWidth || '1px');
-  const [borderRadius, setBorderRadius] = useState(node?.style?.borderRadius || '4px');
-  const [fontSize, setFontSize] = useState(node?.style?.fontSize || '14px');
+  const [backgroundColor, setBackgroundColor] = useState<string>(node?.style?.backgroundColor || '#ffffff');
+  const [borderColor, setBorderColor] = useState<string>(node?.style?.borderColor || '#000000');
+  const [textColor, setTextColor] = useState<string>(node?.style?.color || '#000000');
+  const [borderStyle, setBorderStyle] = useState<string>(node?.style?.borderStyle || 'solid');
+  const [borderWidth, setBorderWidth] = useState<string>(node?.style?.borderWidth || '1px');
+  const [borderRadius, setBorderRadius] = useState<string>(node?.style?.borderRadius || '4px');
+  const [fontSize, setFontSize] = useState<string>(node?.style?.fontSize || '14px');
   const [link, setLink] = useState(node?.data?.link || '');
   const [activeColorPicker, setActiveColorPicker] = useState<'background' | 'border' | 'text' | null>(null);
 
@@ -86,10 +87,6 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
   };
 
   if (!node) return null;
-
-  const borderWidthString = typeof borderWidth === 'number' ? `${borderWidth}px` : String(borderWidth);
-  const borderRadiusString = typeof borderRadius === 'number' ? `${borderRadius}px` : String(borderRadius);
-  const fontSizeString = typeof fontSize === 'number' ? `${fontSize}px` : String(fontSize);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -202,7 +199,7 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
                   
                   <div>
                     <Label htmlFor="border-width">Espessura da Borda</Label>
-                    <Select value={borderWidthString} onValueChange={setBorderWidth}>
+                    <Select value={borderWidth} onValueChange={setBorderWidth}>
                       <SelectTrigger id="border-width" className="w-full">
                         <SelectValue placeholder="Espessura" />
                       </SelectTrigger>
@@ -217,7 +214,7 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
                   
                   <div>
                     <Label htmlFor="border-radius">Arredondamento</Label>
-                    <Select value={borderRadiusString} onValueChange={setBorderRadius}>
+                    <Select value={borderRadius} onValueChange={setBorderRadius}>
                       <SelectTrigger id="border-radius" className="w-full">
                         <SelectValue placeholder="Arredondamento" />
                       </SelectTrigger>
@@ -233,7 +230,7 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
                   
                   <div>
                     <Label htmlFor="font-size">Tamanho da Fonte</Label>
-                    <Select value={fontSizeString} onValueChange={setFontSize}>
+                    <Select value={fontSize} onValueChange={setFontSize}>
                       <SelectTrigger id="font-size" className="w-full">
                         <SelectValue placeholder="Tamanho" />
                       </SelectTrigger>
@@ -260,10 +257,10 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
                 borderColor,
                 color: textColor,
                 borderStyle,
-                borderWidth: borderWidthString,
-                borderRadius: borderRadiusString,
-                fontSize: fontSizeString,
-                border: `${borderWidthString} ${borderStyle} ${borderColor}`
+                borderWidth,
+                borderRadius,
+                fontSize,
+                border: `${borderWidth} ${borderStyle} ${borderColor}`
               }}
             >
               {label || "Texto do Nó"}

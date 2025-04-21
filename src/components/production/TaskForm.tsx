@@ -1,499 +1,464 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
   DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
+import { Label } from "@/components/ui/label";
+import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon, Plus, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import { 
+  Calendar,
+  Trash,
+  Plus,
+  Clock,
+  CheckCircle2,
+  X
+} from "lucide-react";
+import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { KanbanCardItem } from "../kanban/types";
-
-// Define the schema for the task form
-const taskFormSchema = z.object({
-  title: z.string().min(2, {
-    message: "Título deve ter pelo menos 2 caracteres.",
-  }),
-  description: z.string().optional(),
-  client: z.string().optional(),
-  priority: z.string().default("medium"),
-  status: z.string().default("backlog"),
-  assignedTo: z.string().optional(),
-  startDate: z.date().optional().nullable(),
-  endDate: z.date().optional().nullable(),
-});
-
-type TaskFormValues = z.infer<typeof taskFormSchema>;
+import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Calendar as CalendarComponent } from "../ui/calendar";
+import { Checkbox } from "../ui/checkbox";
+import { Slider } from "../ui/slider";
 
 interface TaskFormProps {
   isOpen: boolean;
   onClose: () => void;
   onAddTask: (task: KanbanCardItem) => void;
-  initialData?: TaskFormValues;
+  editTask?: KanbanCardItem;
 }
 
-// Default subtask items
-const defaultSubTasks = [
-  { id: "1", description: "Preparar materiais", estimated: 60, completed: false },
-  { id: "2", description: "Revisar com o cliente", estimated: 30, completed: false },
+// Sample Team members
+const teamMembers = [
+  { id: "user-1", name: "Carlos Silva", avatar: "/placeholder.svg" },
+  { id: "user-2", name: "Ana Oliveira", avatar: "/placeholder.svg" },
+  { id: "user-3", name: "Miguel Santos", avatar: "/placeholder.svg" },
+  { id: "user-4", name: "Julia Costa", avatar: "/placeholder.svg" },
+  { id: "user-5", name: "Roberto Alves", avatar: "/placeholder.svg" },
+  { id: "user-6", name: "Fernanda Lima", avatar: "/placeholder.svg" },
 ];
 
-const TaskForm = ({ isOpen, onClose, onAddTask, initialData }: TaskFormProps) => {
+// Template subtasks
+const templateSubTasks = [
+  { template: "Design", tasks: ["Criação de wireframes", "Design de UI", "Revisão de design"] },
+  { template: "Desenvolvimento", tasks: ["Setup do projeto", "Implementação do backend", "Implementação do frontend", "Testes unitários"] },
+  { template: "Reunião", tasks: ["Preparação de material", "Apresentação", "Documentação de decisões"] },
+  { template: "Documentação", tasks: ["Escrever especificações", "Criar documentação técnica", "Atualizar README"] }
+];
+
+const TaskForm = ({ isOpen, onClose, onAddTask, editTask }: TaskFormProps) => {
+  const [title, setTitle] = useState(editTask?.title || "");
+  const [description, setDescription] = useState(editTask?.description || "");
+  const [client, setClient] = useState(editTask?.client || "");
+  const [priority, setPriority] = useState<"high" | "medium" | "low">(editTask?.priority || "medium");
+  const [assignedUserId, setAssignedUserId] = useState(editTask?.assignedTo?.id || "");
+  const [startDate, setStartDate] = useState<Date>(editTask?.startDate || new Date());
+  const [endDate, setEndDate] = useState<Date>(editTask?.endDate || addDays(new Date(), 7));
+  const [completion, setCompletion] = useState(editTask?.completion || 0);
+  const [subTasks, setSubTasks] = useState(
+    editTask?.subTasks || []
+  );
+  const [newSubTaskDesc, setNewSubTaskDesc] = useState("");
+  const [newSubTaskEstimated, setNewSubTaskEstimated] = useState("1");
+  const [selectedTemplate, setSelectedTemplate] = useState("");
+  
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [subTasks, setSubTasks] = useState(defaultSubTasks);
-  const [newSubTask, setNewSubTask] = useState("");
-  const [newEstimated, setNewEstimated] = useState(30);
 
-  // Fetch team members for assigned to selection
-  const { data: teamMembers = [] } = useQuery({
-    queryKey: ['teamMembers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, role, avatar')
-        .order('name');
-        
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Fetch clients for client selection
-  const { data: clients = [] } = useQuery({
-    queryKey: ['clients'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clients')
-        .select('id, name')
-        .order('name');
-        
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Initialize the form with default values or provided data
-  const form = useForm<TaskFormValues>({
-    resolver: zodResolver(taskFormSchema),
-    defaultValues: initialData || {
-      title: "",
-      description: "",
-      client: "",
-      priority: "medium",
-      status: "backlog",
-      assignedTo: "",
-      startDate: null,
-      endDate: null,
-    },
-  });
-
-  const onSubmit = async (data: TaskFormValues) => {
-    setLoading(true);
-    try {
-      // Find assigned team member
-      const assignedTeamMember = teamMembers.find((m: any) => m.id === data.assignedTo);
-      
-      // Create task data structure
-      const taskData: KanbanCardItem = {
-        id: `task-${Date.now()}`,
-        title: data.title,
-        description: data.description || "",
-        client: data.client || "",
-        priority: data.priority as "high" | "medium" | "low",
-        completion: 0,
-        assignedTo: assignedTeamMember ? {
-          id: assignedTeamMember.id,
-          name: assignedTeamMember.name,
-          avatar: assignedTeamMember.avatar || "/placeholder.svg"
-        } : undefined,
-        subTasks: subTasks,
-        startDate: data.startDate,
-        endDate: data.endDate
-      };
-      
-      onAddTask(taskData);
-      
-      toast({
-        title: "Tarefa adicionada",
-        description: "A tarefa foi adicionada com sucesso.",
-      });
-      
-      form.reset();
-      setSubTasks(defaultSubTasks);
-      onClose();
-    } catch (error) {
-      console.error("Erro ao adicionar tarefa:", error);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title.trim()) {
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao adicionar a tarefa.",
-        variant: "destructive",
+        description: "O título da tarefa é obrigatório.",
+        variant: "destructive"
       });
-    } finally {
-      setLoading(false);
+      return;
+    }
+    
+    // Find the assigned user object
+    const assignedUser = teamMembers.find(member => member.id === assignedUserId);
+    
+    const newTask: KanbanCardItem = {
+      id: editTask?.id || `task-${Date.now()}`,
+      title,
+      description,
+      client,
+      priority,
+      completion,
+      startDate,
+      endDate,
+      assignedTo: assignedUser ? {
+        id: assignedUser.id,
+        name: assignedUser.name,
+        avatar: assignedUser.avatar
+      } : undefined,
+      subTasks: subTasks.length > 0 ? subTasks : undefined
+    };
+    
+    onAddTask(newTask);
+    resetForm();
+    onClose();
+    
+    toast({
+      title: editTask ? "Tarefa atualizada" : "Tarefa criada",
+      description: `${title} foi ${editTask ? "atualizada" : "adicionada"} com sucesso.`
+    });
+  };
+
+  const resetForm = () => {
+    if (!editTask) {
+      setTitle("");
+      setDescription("");
+      setClient("");
+      setPriority("medium");
+      setAssignedUserId("");
+      setStartDate(new Date());
+      setEndDate(addDays(new Date(), 7));
+      setCompletion(0);
+      setSubTasks([]);
     }
   };
 
-  // Add a new subtask
-  const addSubTask = () => {
-    if (newSubTask.trim()) {
-      setSubTasks([
-        ...subTasks,
-        { 
-          id: `subtask-${Date.now()}`, 
-          description: newSubTask, 
-          estimated: newEstimated,
-          completed: false 
-        }
-      ]);
-      setNewSubTask("");
-      setNewEstimated(30);
-    }
+  const handleAddSubTask = () => {
+    if (!newSubTaskDesc.trim()) return;
+    
+    const estimated = parseInt(newSubTaskEstimated);
+    if (isNaN(estimated) || estimated <= 0) return;
+    
+    const newSubTask = {
+      id: `subtask-${Date.now()}`,
+      description: newSubTaskDesc,
+      estimated,
+      completed: false
+    };
+    
+    setSubTasks([...subTasks, newSubTask]);
+    setNewSubTaskDesc("");
+    setNewSubTaskEstimated("1");
   };
 
-  // Remove a subtask
-  const removeSubTask = (id: string) => {
+  const handleRemoveSubTask = (id: string) => {
     setSubTasks(subTasks.filter(task => task.id !== id));
   };
 
-  // Toggle subtask completion
-  const toggleSubTaskCompletion = (id: string) => {
-    setSubTasks(
-      subTasks.map(task => 
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
+  const handleToggleSubTask = (id: string, completed: boolean) => {
+    setSubTasks(subTasks.map(task => 
+      task.id === id ? { ...task, completed } : task
+    ));
   };
+
+  const handleApplyTemplate = () => {
+    if (!selectedTemplate) return;
+    
+    const template = templateSubTasks.find(t => t.template === selectedTemplate);
+    if (!template) return;
+    
+    const newSubTasks = template.tasks.map((task, index) => ({
+      id: `subtask-${Date.now()}-${index}`,
+      description: task,
+      estimated: 2,
+      completed: false
+    }));
+    
+    setSubTasks([...subTasks, ...newSubTasks]);
+    setSelectedTemplate("");
+  };
+
+  // Calculate completion percentage based on subtasks
+  const calculateCompletionFromSubtasks = () => {
+    if (subTasks.length === 0) return completion;
+    
+    const completedCount = subTasks.filter(task => task.completed).length;
+    return Math.round((completedCount / subTasks.length) * 100);
+  };
+
+  // Update completion when subtasks change
+  const updateCompletionFromSubtasks = () => {
+    const newCompletion = calculateCompletionFromSubtasks();
+    setCompletion(newCompletion);
+  };
+
+  // Call this function whenever subtasks change
+  useState(() => {
+    updateCompletionFromSubtasks();
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Nova Tarefa</DialogTitle>
-          <DialogDescription>
-            Adicione uma nova tarefa ao quadro de produção.
-          </DialogDescription>
+          <DialogTitle>{editTask ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Título</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Título da tarefa" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Descreva a tarefa" 
-                      {...field} 
-                      value={field.value || ""} 
-                      className="min-h-[100px]"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="client"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cliente</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um cliente" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {clients.map((client: any) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="assignedTo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Responsável</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Atribuir a" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {teamMembers.map((member: any) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {member.name} - {member.role}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prioridade</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a prioridade" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="low">Baixa</SelectItem>
-                        <SelectItem value="medium">Média</SelectItem>
-                        <SelectItem value="high">Alta</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="backlog">Backlog</SelectItem>
-                        <SelectItem value="in-progress">Em Progresso</SelectItem>
-                        <SelectItem value="review">Revisão</SelectItem>
-                        <SelectItem value="done">Concluído</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Data de Início</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP", { locale: ptBR })
-                            ) : (
-                              <span>Selecione uma data</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value || undefined}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Data de Entrega</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP", { locale: ptBR })
-                            ) : (
-                              <span>Selecione uma data</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value || undefined}
-                          onSelect={field.onChange}
-                          disabled={(date) => 
-                            (form.getValues().startDate && date < form.getValues().startDate!) ||
-                            date < new Date()
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="title" className="text-right">
+                Título
+              </Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="col-span-3"
+                placeholder="Digite o título da tarefa"
+                required
               />
             </div>
-
-            {/* SubTasks Section */}
-            <div className="border rounded-md p-4">
-              <h3 className="text-lg font-medium mb-3">Subtarefas</h3>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Descrição
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="col-span-3"
+                placeholder="Descreva a tarefa em detalhes"
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="client" className="text-right">
+                Cliente
+              </Label>
+              <Input
+                id="client"
+                value={client}
+                onChange={(e) => setClient(e.target.value)}
+                className="col-span-3"
+                placeholder="Nome do cliente relacionado (opcional)"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="assigned" className="text-right">
+                Responsável
+              </Label>
+              <Select value={assignedUserId} onValueChange={setAssignedUserId}>
+                <SelectTrigger id="assigned" className="col-span-3">
+                  <SelectValue placeholder="Selecione o responsável" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="priority" className="text-right">
+                Prioridade
+              </Label>
+              <Select value={priority} onValueChange={(val: "high" | "medium" | "low") => setPriority(val)}>
+                <SelectTrigger id="priority" className="col-span-3">
+                  <SelectValue placeholder="Selecione a prioridade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="high">Alta</SelectItem>
+                  <SelectItem value="medium">Média</SelectItem>
+                  <SelectItem value="low">Baixa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">
+                Data Inicial
+              </Label>
+              <div className="col-span-3">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => date && setStartDate(date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">
+                Data Final
+              </Label>
+              <div className="col-span-3">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(date) => date && setEndDate(date)}
+                      initialFocus
+                      disabled={(date) => date < startDate}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="completion" className="text-right">
+                Progresso ({completion}%)
+              </Label>
+              <div className="col-span-3">
+                <Slider
+                  defaultValue={[completion]}
+                  max={100}
+                  step={5}
+                  value={[completion]}
+                  onValueChange={(values) => setCompletion(values[0])}
+                />
+              </div>
+            </div>
+            
+            {/* Sub-tasks section */}
+            <div className="border-t pt-4 mt-2">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium">Subtarefas</h3>
+                
+                <div className="flex gap-2 items-center">
+                  <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Usar modelo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templateSubTasks.map((template) => (
+                        <SelectItem key={template.template} value={template.template}>
+                          {template.template}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleApplyTemplate}
+                    disabled={!selectedTemplate}
+                  >
+                    Aplicar
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Add subtask form */}
               <div className="flex gap-2 mb-4">
-                <Input 
-                  placeholder="Descrição da subtarefa" 
-                  value={newSubTask}
-                  onChange={(e) => setNewSubTask(e.target.value)}
-                  className="flex-1"
+                <Input
+                  value={newSubTaskDesc}
+                  onChange={(e) => setNewSubTaskDesc(e.target.value)}
+                  placeholder="Descrição da subtarefa"
+                  className="flex-grow"
                 />
-                <Input 
-                  type="number"
-                  placeholder="Min" 
-                  value={newEstimated}
-                  onChange={(e) => setNewEstimated(parseInt(e.target.value, 10) || 0)}
-                  className="w-20"
-                />
+                <div className="flex items-center px-3 bg-muted rounded">
+                  <Clock size={16} className="text-muted-foreground mr-2" />
+                  <Input
+                    type="number"
+                    value={newSubTaskEstimated}
+                    onChange={(e) => setNewSubTaskEstimated(e.target.value)}
+                    className="w-16 border-0 p-0 bg-transparent"
+                    min="1"
+                  />
+                  <span className="text-sm text-muted-foreground">h</span>
+                </div>
                 <Button 
                   type="button"
-                  onClick={addSubTask}
-                  disabled={!newSubTask.trim()}
+                  size="icon"
+                  onClick={handleAddSubTask}
                 >
                   <Plus size={16} />
                 </Button>
               </div>
-              <div className="space-y-2">
+              
+              {/* Subtasks list */}
+              <div className="space-y-2 max-h-[200px] overflow-auto">
                 {subTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between border-b pb-2">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
+                  <div 
+                    key={task.id}
+                    className="flex items-center justify-between p-2 bg-muted/50 rounded-md"
+                  >
+                    <div className="flex items-center">
+                      <Checkbox 
                         checked={task.completed}
-                        onChange={() => toggleSubTaskCompletion(task.id)}
-                        className="rounded-sm"
+                        onCheckedChange={(checked) => 
+                          handleToggleSubTask(task.id, checked === true)
+                        }
+                        className="mr-2"
                       />
-                      <div className="flex flex-col">
-                        <span className={`text-sm ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
-                          {task.description}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          Estimado: {task.estimated} min
-                        </span>
-                      </div>
+                      <span className={task.completed ? "line-through text-muted-foreground" : ""}>
+                        {task.description}
+                      </span>
                     </div>
-                    <Button 
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeSubTask(task.id)}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm text-muted-foreground flex items-center">
+                        <Clock size={14} className="mr-1" />
+                        <span>{task.estimated}h</span>
+                      </div>
+                      <Button 
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => handleRemoveSubTask(task.id)}
+                      >
+                        <X size={14} />
+                      </Button>
+                    </div>
                   </div>
                 ))}
+                {subTasks.length === 0 && (
+                  <div className="text-center text-sm text-muted-foreground p-2">
+                    Nenhuma subtarefa adicionada
+                  </div>
+                )}
               </div>
             </div>
-
-            <div className="flex justify-end gap-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onClose}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Salvando..." : "Adicionar Tarefa"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit">
+              {editTask ? "Atualizar" : "Criar"} Tarefa
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
