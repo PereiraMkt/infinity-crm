@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from "react";
 import {
   ReactFlow,
@@ -304,14 +303,10 @@ function MindMapFlow() {
     };
     
     const newNode = createTemplateNode(template, nodeHandlers);
-    // Apply current default styles to template node
-    if (!newNode.style) {
-      newNode.style = {};
-    }
     
     newNode.style = {
-      ...newNode.style,
-      backgroundColor: defaultNodeColor,
+      ...(newNode.style || {}),
+      backgroundColor: template.color || defaultNodeColor,
       borderColor: defaultBorderColor,
       color: defaultTextColor,
       borderStyle: defaultBorderStyle,
