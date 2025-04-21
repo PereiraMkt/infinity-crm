@@ -36,18 +36,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Função para buscar dados de perfil e empresa
   const fetchUserData = async (userId: string) => {
     try {
+      console.log("Buscando dados do usuário:", userId);
       const result = await hydrateUser();
-      if (result.profile) setProfile(result.profile);
-      if (result.company) setCompany(result.company);
+      
+      if (result.profile) {
+        console.log("Perfil encontrado:", result.profile);
+        setProfile(result.profile);
+      }
+      
+      if (result.company) {
+        console.log("Empresa encontrada:", result.company);
+        setCompany(result.company);
+      }
     } catch (error) {
       console.error("Erro ao buscar dados do usuário:", error);
     }
   };
 
   useEffect(() => {
+    console.log("Inicializando AuthContext");
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
+        console.log("Evento de autenticação:", event, currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -77,6 +89,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Sessão existente:", currentSession?.user?.id);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
@@ -95,7 +108,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
+      console.log("Iniciando tentativa de login...");
       const result = await loginUser(email, password);
+      
       if (result.profile) setProfile(result.profile);
       if (result.company) setCompany(result.company);
       
@@ -108,6 +123,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       let errorMessage = 'Erro ao fazer login. Tente novamente.';
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos. Verifique suas credenciais.';
+      } else if (error.message.includes('A senha deve conter')) {
+        errorMessage = error.message;
       }
       
       toastNotification({
@@ -123,20 +140,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, name: string, isCompany: boolean) => {
     setLoading(true);
     try {
+      console.log("Iniciando processo de registro...");
       // Registrar o usuário
       const result = await registerUser({ name, email, password, isCompany });
+      console.log("Registro concluído, resultado:", result);
       
-      // Em vez de tentar fazer login novamente, buscar dados da sessão e perfil
-      if (session) {
-        // Se já estamos com uma sessão (devido ao login automático no registerUser)
+      // Buscar dados do usuário após registro bem-sucedido
+      if (result.user) {
+        // Buscar dados do perfil e empresa
         const userData = await hydrateUser();
         if (userData.profile) setProfile(userData.profile);
         if (userData.company) setCompany(userData.company);
-      } else {
-        // Se ainda não temos uma sessão, fazer login explicitamente
-        const loginResult = await loginUser(email, password);
-        if (loginResult.profile) setProfile(loginResult.profile);
-        if (loginResult.company) setCompany(loginResult.company);
       }
       
       toast.success('Cadastro realizado com sucesso!');

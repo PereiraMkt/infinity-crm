@@ -18,6 +18,8 @@ export async function registerUser({ name, email, password, isCompany }: Registe
   }
 
   try {
+    console.log("Iniciando registro de usuário...");
+    
     // Etapa 1: criar usuário no Supabase Auth
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -26,39 +28,66 @@ export async function registerUser({ name, email, password, isCompany }: Registe
         data: { name }
       }
     });
-    if (signUpError) throw new Error(signUpError.message);
-    if (!signUpData?.user) throw new Error("Erro inesperado ao registrar usuário.");
+    
+    if (signUpError) {
+      console.error("Erro no registro:", signUpError);
+      throw new Error(signUpError.message);
+    }
+    
+    if (!signUpData?.user) {
+      console.error("Nenhum dado de usuário retornado");
+      throw new Error("Erro inesperado ao registrar usuário.");
+    }
+    
     const userId = signUpData.user.id;
+    console.log("Usuário criado com ID:", userId);
 
     // Etapa 2: login automático (para obter token válido do supabase client)
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    console.log("Realizando login automático após registro...");
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password
     });
+    
     if (signInError) {
+      console.error("Erro no login após registro:", signInError);
       throw new Error("Erro ao autenticar após registro: " + signInError.message);
     }
-
-    // Esperar sessão válida ser propagada
-    let attempts = 0;
-    let session = null;
-    while (attempts < 10) {
-      const { data: sessionResult } = await supabase.auth.getSession();
-      session = sessionResult?.session;
-      if (session?.access_token) break;
-      await new Promise(res => setTimeout(res, 200));
-      attempts++;
+    
+    if (!signInData.session) {
+      console.error("Sessão não obtida após login");
+      throw new Error("Sessão não obtida após login automático");
     }
+    
+    console.log("Login automático realizado com sucesso");
+
+    // Garantir que temos uma sessão válida com token de acesso
+    console.log("Verificando sessão válida...");
+    const { data: { session } } = await supabase.auth.getSession();
+    
     if (!session?.access_token) {
+      console.error("Token de acesso não disponível");
       throw new Error("Sessão não propagada após registro/login. Tente novamente.");
     }
+    
+    console.log("Sessão válida obtida com token de acesso");
 
-    // Etapa 3: criar empresa se for company, já autenticado
+    // Etapa 3: criar empresa se for company
     let companyId: string | undefined = undefined;
+    
     if (isCompany) {
-      const { data: companyInsert, error: companyError } = await supabase
+      console.log("Criando registro de empresa...");
+      
+      // Reconfigurar o cliente com a sessão atual para garantir autenticação
+      const authedClient = supabase;
+      
+      const { data: companyInsert, error: companyError } = await authedClient
         .from("companies")
-        .insert([{ name, email, owner_id: userId }])
+        .insert([{ 
+          name, 
+          email, 
+          owner_id: userId 
+        }])
         .select("id")
         .single();
 
@@ -68,12 +97,17 @@ export async function registerUser({ name, email, password, isCompany }: Registe
       }
 
       companyId = companyInsert?.id;
+      console.log("Empresa criada com ID:", companyId);
     }
 
     // Etapa 4: atualizar profile com company_id + role
+    console.log("Atualizando perfil do usuário...");
     const { error: profileUpdateError } = await supabase
       .from("profiles")
-      .update({ company_id: companyId, role: isCompany ? "admin" : "user" })
+      .update({ 
+        company_id: companyId, 
+        role: isCompany ? "admin" : "user" 
+      })
       .eq("id", userId);
 
     if (profileUpdateError) {
@@ -81,6 +115,7 @@ export async function registerUser({ name, email, password, isCompany }: Registe
       throw new Error("Erro ao atualizar perfil: " + profileUpdateError.message);
     }
 
+    console.log("Registro completo realizado com sucesso");
     return {
       user: signUpData.user,
       companyId

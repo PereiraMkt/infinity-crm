@@ -4,9 +4,17 @@ import { UserProfile } from "@/types/user";
 import { Company } from "@/types/company";
 
 export async function hydrateUser() {
+  console.log("Iniciando hidratação dos dados do usuário...");
+  
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData?.session?.user?.id;
-  if (!userId) throw new Error("Usuário não autenticado!");
+  
+  if (!userId) {
+    console.log("Usuário não autenticado");
+    throw new Error("Usuário não autenticado!");
+  }
+  
+  console.log("Buscando perfil para o usuário:", userId);
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -18,9 +26,12 @@ export async function hydrateUser() {
     console.error("Erro ao buscar perfil:", profileError);
     throw new Error("Erro ao buscar dados do usuário");
   }
+  
+  console.log("Perfil encontrado:", profile);
 
   let company = null;
   if (profile?.company_id) {
+    console.log("Buscando empresa:", profile.company_id);
     const { data: companyData, error: companyError } = await supabase
       .from("companies")
       .select("*")
@@ -28,14 +39,14 @@ export async function hydrateUser() {
       .single();
       
     if (!companyError) {
+      console.log("Empresa encontrada:", companyData);
       company = companyData;
     } else {
       console.error("Erro ao buscar empresa:", companyError);
     }
   }
 
-  // Adicione fetch para clients, leads, tasks aqui se necessário
-
+  console.log("Hidratação de dados concluída");
   return {
     profile,
     company,
