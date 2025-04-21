@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from "react";
 import {
   ReactFlow,
@@ -26,7 +25,7 @@ function MindMapFlow() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const { fitView, addNodes, setViewport } = useReactFlow();
+  const { fitView, addNodes, setViewport, getViewport } = useReactFlow();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [nodeName, setNodeName] = useState("");
   const [isNodeDialogOpen, setIsNodeDialogOpen] = useState(false);
@@ -187,13 +186,8 @@ function MindMapFlow() {
     });
   };
 
-  // Fixed viewport handling - updated to use correct types
   const handleZoomIn = () => {
-    // Get current viewport first
-    const reactFlowInstance = useReactFlow();
-    const currentViewport = reactFlowInstance.getViewport();
-    
-    // Then set the new viewport with updated zoom
+    const currentViewport = getViewport();
     setViewport({
       x: currentViewport.x,
       y: currentViewport.y,
@@ -202,11 +196,7 @@ function MindMapFlow() {
   };
 
   const handleZoomOut = () => {
-    // Get current viewport first
-    const reactFlowInstance = useReactFlow();
-    const currentViewport = reactFlowInstance.getViewport();
-    
-    // Then set the new viewport with updated zoom
+    const currentViewport = getViewport();
     setViewport({
       x: currentViewport.x,
       y: currentViewport.y,
@@ -219,11 +209,9 @@ function MindMapFlow() {
   };
 
   const onNodesChangeCustom = (changes: NodeChange[]) => {
-    // We need this to update node data properly
     onNodesChange(changes);
   };
 
-  // Custom node template options
   const templates = [
     { id: 'decision', name: 'Decisão', shape: 'diamond', color: '#fee2e2' },
     { id: 'process', name: 'Processo', shape: 'rectangle', color: '#dbeafe' },
