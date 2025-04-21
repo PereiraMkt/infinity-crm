@@ -27,25 +27,35 @@ export async function registerUser({ name, email, password, isCompany }: Registe
       }
     });
     if (signUpError) throw new Error(signUpError.message);
-
     if (!signUpData?.user) throw new Error("Erro inesperado ao registrar usuário.");
-
     const userId = signUpData.user.id;
 
-    // Importante: Fazer login imediatamente para obter um token válido para operações que exigem autenticação
+    // Etapa 2: login automático (para obter token válido do supabase client)
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password
     });
-    
     if (signInError) {
       throw new Error("Erro ao autenticar após registro: " + signInError.message);
     }
 
-    // Etapa 2: criar empresa se for company
+    // Esperar sessão válida ser propagada
+    let attempts = 0;
+    let session = null;
+    while (attempts < 10) {
+      const { data: sessionResult } = await supabase.auth.getSession();
+      session = sessionResult?.session;
+      if (session?.access_token) break;
+      await new Promise(res => setTimeout(res, 200));
+      attempts++;
+    }
+    if (!session?.access_token) {
+      throw new Error("Sessão não propagada após registro/login. Tente novamente.");
+    }
+
+    // Etapa 3: criar empresa se for company, já autenticado
     let companyId: string | undefined = undefined;
     if (isCompany) {
-      // Como o usuário agora está autenticado, esta operação deve funcionar com a RLS policy
       const { data: companyInsert, error: companyError } = await supabase
         .from("companies")
         .insert([{ name, email, owner_id: userId }])
@@ -53,7 +63,6 @@ export async function registerUser({ name, email, password, isCompany }: Registe
         .single();
 
       if (companyError) {
-        // Capturar o erro específico para diagnóstico
         console.error("Erro completo na criação da empresa:", companyError);
         throw new Error("Erro ao criar empresa: " + companyError.message);
       }
@@ -61,7 +70,7 @@ export async function registerUser({ name, email, password, isCompany }: Registe
       companyId = companyInsert?.id;
     }
 
-    // Etapa 3: atualizar profile com company_id (e papel 'admin' se company)
+    // Etapa 4: atualizar profile com company_id + role
     const { error: profileUpdateError } = await supabase
       .from("profiles")
       .update({ company_id: companyId, role: isCompany ? "admin" : "user" })
@@ -77,7 +86,6 @@ export async function registerUser({ name, email, password, isCompany }: Registe
       companyId
     };
   } catch (error: any) {
-    // Exibir erro detalhado no console para diagnóstico
     console.error("Erro no processo de registro:", error);
     throw error;
   }
