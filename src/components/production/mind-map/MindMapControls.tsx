@@ -1,0 +1,43 @@
+
+import { Button } from "@/components/ui/button";
+import { RefreshCw, ZoomIn, ZoomOut } from "lucide-react";
+import { Viewport, useReactFlow } from "reactflow";
+
+interface MindMapControlsProps {
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onFitView: () => void;
+}
+
+const MindMapControls = ({ onZoomIn, onZoomOut, onFitView }: MindMapControlsProps) => {
+  return (
+    <div className="absolute bottom-20 right-4 z-10 flex flex-col gap-2">
+      <Button 
+        size="sm" 
+        variant="secondary" 
+        className="h-8 w-8 p-0 rounded-full shadow-md"
+        onClick={onZoomIn}
+      >
+        <ZoomIn size={16} />
+      </Button>
+      <Button 
+        size="sm" 
+        variant="secondary" 
+        className="h-8 w-8 p-0 rounded-full shadow-md"
+        onClick={onZoomOut}
+      >
+        <ZoomOut size={16} />
+      </Button>
+      <Button 
+        size="sm" 
+        variant="secondary" 
+        className="h-8 w-8 p-0 rounded-full shadow-md"
+        onClick={onFitView}
+      >
+        <RefreshCw size={16} />
+      </Button>
+    </div>
+  );
+};
+
+export default MindMapControls;

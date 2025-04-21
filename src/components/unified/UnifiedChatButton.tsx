@@ -3,28 +3,38 @@ import React, { useState } from "react";
 import { MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import ChatFullScreenDialog from "./ChatFullScreenDialog";
-import FloatingPanel from "./FloatingPanel";
-import { useFloatingAction } from "@/hooks/use-floating-action";
+import ChatFullScreenDialog from "@/components/chat/ChatFullScreenDialog";
+import FloatingPanel from "@/components/chat/FloatingPanel";
 
-interface UnifiedFloatingActionProps {
+interface UnifiedChatButtonProps {
   defaultOpen?: boolean;
 }
 
-const UnifiedFloatingAction = ({ defaultOpen = false }: UnifiedFloatingActionProps) => {
+const UnifiedChatButton = ({ defaultOpen = false }: UnifiedChatButtonProps) => {
   const { toast } = useToast();
-  const {
-    isOpen,
-    isFullScreen,
-    activeTab,
-    chatHeight,
-    chatWidth,
-    isResizing,
-    setActiveTab,
-    toggleOpen,
-    toggleFullScreen,
-    handleResizing
-  } = useFloatingAction({ defaultOpen });
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [activeTab, setActiveTab] = useState("chat");
+  const [chatHeight, setChatHeight] = useState(500);
+  const [chatWidth, setChatWidth] = useState(350);
+
+  const toggleOpen = () => {
+    setIsOpen(!isOpen);
+    if (isFullScreen) {
+      setIsFullScreen(false);
+    }
+  };
+
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
+    if (!isFullScreen) {
+      setIsOpen(false);
+    }
+  };
+
+  const handleResizing = () => {
+    // Função para lidar com o redimensionamento do painel
+  };
 
   return (
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end">
@@ -57,4 +67,4 @@ const UnifiedFloatingAction = ({ defaultOpen = false }: UnifiedFloatingActionPro
   );
 };
 
-export default UnifiedFloatingAction;
+export default UnifiedChatButton;

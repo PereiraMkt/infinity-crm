@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback } from "react";
 import {
   ReactFlow,
@@ -10,15 +11,15 @@ import {
   Node,
   Edge,
   useReactFlow,
-  NodeChange,
-  Viewport
+  NodeChange
 } from "reactflow";
 import { useToast } from "@/hooks/use-toast";
 import CustomNode from "./CustomNode";
-import NodeDialog from "./NodeDialog";
-import EdgeDialog from "./EdgeDialog";
 import SidebarPanel from "./SidebarPanel";
 import { initialNodes, initialEdges, snapGrid } from "./constants";
+import MindMapControls from "./MindMapControls";
+import { NodeDialog, EdgeDialog } from "./NodeDialogs";
+import { useNodeTemplates } from "./NodeTemplates";
 
 // Main component for mind map flow
 function MindMapFlow() {
@@ -33,6 +34,7 @@ function MindMapFlow() {
   const [isEditingEdge, setIsEditingEdge] = useState(false);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const { toast } = useToast();
+  const { templates, createTemplateNode } = useNodeTemplates();
 
   const nodeTypes = {
     customNode: CustomNode,
@@ -40,22 +42,19 @@ function MindMapFlow() {
   
   const edgeTypes = {};
 
+  // Connection handlers
   const onConnect = useCallback((params: any) => {
     setEdges((eds) => addEdge(params, eds));
   }, [setEdges]);
 
+  // Node event handlers
   const onDrop = (event: React.DragEvent) => {
     event.preventDefault();
 
     const reactFlowBounds = reactFlowWrapper.current?.getBoundingClientRect();
     const type = event.dataTransfer.getData("application/reactflow");
 
-    // check if the dropped element is valid
-    if (typeof type === "undefined" || !type) {
-      return;
-    }
-
-    if (!reactFlowBounds) return;
+    if (typeof type === "undefined" || !type || !reactFlowBounds) return;
 
     const position = {
       x: event.clientX - reactFlowBounds.left,
@@ -82,6 +81,7 @@ function MindMapFlow() {
     event.dataTransfer.dropEffect = "move";
   };
 
+  // Node management functions
   const addNode = () => {
     if (nodeName.trim() === "") return;
 
@@ -108,6 +108,7 @@ function MindMapFlow() {
     });
   };
 
+  // Node property change handlers
   const handleNodeNameChange = (id: string, newName: string) => {
     setNodes(nodes.map(node => 
       node.id === id 
@@ -132,6 +133,7 @@ function MindMapFlow() {
     ));
   };
 
+  // Node interaction handlers
   const handleNodeDoubleClick = (event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
     setIsNodeDialogOpen(true);
@@ -149,6 +151,7 @@ function MindMapFlow() {
     });
   };
 
+  // Edge handlers
   const handleEdgeUpdate = (event: React.MouseEvent, edge: Edge) => {
     setSelectedEdge(edge);
     setIsEditingEdge(true);
@@ -186,6 +189,7 @@ function MindMapFlow() {
     });
   };
 
+  // Viewport control functions
   const handleZoomIn = () => {
     const currentViewport = getViewport();
     setViewport({
@@ -212,37 +216,16 @@ function MindMapFlow() {
     onNodesChange(changes);
   };
 
-  const templates = [
-    { id: 'decision', name: 'Decisão', shape: 'diamond', color: '#fee2e2' },
-    { id: 'process', name: 'Processo', shape: 'rectangle', color: '#dbeafe' },
-    { id: 'input', name: 'Entrada', shape: 'ellipse', color: '#dcfce7' },
-    { id: 'output', name: 'Saída', shape: 'roundedRectangle', color: '#f3e8ff' },
-    { id: 'funnel', name: 'Funil', shape: 'funnel', color: '#fef3c7' },
-  ];
-
+  // Template node function
   const addTemplateNode = (template: any) => {
-    const newNode = {
-      id: Date.now().toString(),
-      type: "customNode",
-      data: { 
-        label: template.name,
-        backgroundColor: template.color,
-        shape: template.shape,
-        onNameChange: handleNodeNameChange,
-        onDescriptionChange: handleNodeDescriptionChange,
-        onStyleChange: handleNodeStyleChange
-      },
-      position: {
-        x: Math.random() * 500,
-        y: Math.random() * 500,
-      },
+    const nodeHandlers = { 
+      onNameChange: handleNodeNameChange,
+      onDescriptionChange: handleNodeDescriptionChange,
+      onStyleChange: handleNodeStyleChange
     };
-
+    
+    const newNode = createTemplateNode(template, nodeHandlers);
     setNodes((nds) => nds.concat(newNode));
-    toast({
-      title: "Template adicionado",
-      description: `Template "${template.name}" criado com sucesso.`,
-    });
   };
 
   return (
@@ -280,6 +263,11 @@ function MindMapFlow() {
             <Controls />
             <MiniMap />
             <Background />
+            <MindMapControls
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onFitView={handleFitView}
+            />
           </ReactFlow>
         </div>
       </div>

@@ -1,56 +1,48 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface UseFloatingActionProps {
   defaultOpen?: boolean;
+  defaultTab?: string;
 }
 
-export function useFloatingAction({ defaultOpen = false }: UseFloatingActionProps = {}) {
-  const [isOpen, setIsOpen] = useState(false);
+export const useFloatingAction = ({
+  defaultOpen = false,
+  defaultTab = "chat"
+}: UseFloatingActionProps = {}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("chat");
-  const [chatHeight, setChatHeight] = useState<number>(600);
-  const [chatWidth, setChatWidth] = useState<number>(400);
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [chatHeight, setChatHeight] = useState(500);
+  const [chatWidth, setChatWidth] = useState(350);
   const [isResizing, setIsResizing] = useState(false);
-  
-  useEffect(() => {
-    setIsOpen(defaultOpen);
-  }, [defaultOpen]);
-
-  useEffect(() => {
-    if (isResizing) {
-      const handleMouseUp = () => {
-        setIsResizing(false);
-      };
-
-      window.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isResizing]);
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);
-    if (!isOpen) {
+    if (isFullScreen) {
       setIsFullScreen(false);
     }
   };
 
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
+    if (!isFullScreen) {
+      setIsOpen(false);
+    }
+  };
+
+  const setFloatingActionOpen = (open: boolean) => {
+    setIsOpen(open);
+    if (!open && isFullScreen) {
+      setIsFullScreen(false);
+    }
   };
 
   const handleResizing = () => {
     setIsResizing(true);
-  };
-
-  // Adicionando a função setFloatingActionOpen para compatibilidade
-  const setFloatingActionOpen = (open: boolean) => {
-    setIsOpen(open);
-    if (!open) {
-      setIsFullScreen(false);
-    }
+    setTimeout(() => {
+      setIsResizing(false);
+    }, 500);
   };
 
   return {
@@ -63,7 +55,7 @@ export function useFloatingAction({ defaultOpen = false }: UseFloatingActionProp
     setActiveTab,
     toggleOpen,
     toggleFullScreen,
-    handleResizing,
-    setFloatingActionOpen  // Exportando a nova função
+    setFloatingActionOpen,
+    handleResizing
   };
-}
+};
