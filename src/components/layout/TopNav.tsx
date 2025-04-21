@@ -1,4 +1,3 @@
-
 import { Bell, Search, UserCircle, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,13 +6,14 @@ import { Link } from "react-router-dom";
 
 interface TopNavProps {
   onMenuButtonClick: () => void;
+  className?: string;
 }
 
-export function TopNav({ onMenuButtonClick }: TopNavProps) {
+export function TopNav({ onMenuButtonClick, className }: TopNavProps) {
   const { user, profile } = useAuth();
 
   return (
-    <header className="h-16 px-4 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between sticky top-0 z-30">
+    <header className={`h-16 px-4 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between sticky top-0 z-30 ${className || ''}`}>
       <div className="flex items-center gap-2 md:gap-4">
         <Button
           variant="ghost"

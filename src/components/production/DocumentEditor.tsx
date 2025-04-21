@@ -1,15 +1,15 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Bold, Italic, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, 
   ListOrdered, Image, FileText, Save, Download, Share, Plus, 
   Heading1, Heading2, Heading3, Underline, Link, Code, 
   FileSpreadsheet, FilePlus, FolderPlus, Folder, Table, Trash,
-  PaintBucket, Type, PaintBrush, Copy, Cut, Paste, Undo, Redo
+  PaintBucket, Type, PaintBrush, Copy, Scissors as Cut, Play as Paste, Undo, Redo
 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -116,7 +116,6 @@ const DocumentEditor = () => {
   const handleUpdateContent = (newContent: string) => {
     setContent(newContent);
     
-    // Update the content in the documents array
     setDocuments(docs => docs.map(doc => 
       doc.id === activeDocument.id ? { ...doc, content: newContent } : doc
     ));
@@ -125,14 +124,11 @@ const DocumentEditor = () => {
   const handleDeleteSelected = () => {
     if (selectedItems.length === 0) return;
     
-    // Filter out selected items from documents
     const newDocuments = documents.filter(doc => !selectedItems.includes(doc.id));
     
-    // Filter out selected folders and their children recursively
     const foldersToDelete = new Set(selectedItems);
     let foundNew = true;
     
-    // Find all nested folders to delete
     while (foundNew) {
       foundNew = false;
       folders.forEach(folder => {
@@ -149,7 +145,6 @@ const DocumentEditor = () => {
     setFolders(newFolders);
     setSelectedItems([]);
     
-    // If active document is deleted, set another one
     if (selectedItems.includes(activeDocument.id)) {
       if (newDocuments.length > 0) {
         setActiveDocument(newDocuments[0]);
@@ -167,7 +162,6 @@ const DocumentEditor = () => {
   };
 
   const handleSave = () => {
-    // Update the content in the documents array
     setDocuments(docs => docs.map(doc => 
       doc.id === activeDocument.id ? { ...doc, content } : doc
     ));
@@ -204,7 +198,7 @@ const DocumentEditor = () => {
   const handleRenameItem = () => {
     if (!itemToRename || !newName) return;
     
-    if (itemToRename.type) { // Document
+    if (itemToRename.type) {
       setDocuments(docs => docs.map(doc => 
         doc.id === itemToRename.id ? { ...doc, name: newName } : doc
       ));
@@ -212,7 +206,7 @@ const DocumentEditor = () => {
       if (activeDocument.id === itemToRename.id) {
         setActiveDocument({...activeDocument, name: newName});
       }
-    } else { // Folder
+    } else {
       setFolders(fs => fs.map(folder => 
         folder.id === itemToRename.id ? { ...folder, name: newName } : folder
       ));
@@ -267,7 +261,6 @@ const DocumentEditor = () => {
     
     tableHTML += '</table>';
     
-    // Insert table into content
     const newContent = content + '\n' + tableHTML;
     handleUpdateContent(newContent);
     
@@ -286,7 +279,6 @@ const DocumentEditor = () => {
 
   return (
     <div className="bg-card rounded-lg shadow-md flex flex-col h-[calc(100vh-16rem)]">
-      {/* Document header with controls */}
       <div className="flex justify-between items-center p-4 border-b">
         <div className="flex items-center gap-4">
           <Select 
@@ -330,7 +322,6 @@ const DocumentEditor = () => {
         </div>
       </div>
 
-      {/* Document toolbar */}
       <div className="p-2 border-b flex flex-wrap items-center gap-2 bg-muted/30">
         <Tabs defaultValue="paragraph" className="w-auto">
           <TabsList className="h-8">
@@ -398,10 +389,8 @@ const DocumentEditor = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8"
-            onClick={() => setTextAlignment('left')}
-            data-active={textAlignment === 'left'}
             className={`h-8 w-8 ${textAlignment === 'left' ? 'bg-muted' : ''}`}
+            onClick={() => setTextAlignment('left')}
           >
             <AlignLeft size={16} />
           </Button>
@@ -525,7 +514,6 @@ const DocumentEditor = () => {
           </Button>
         </div>
 
-        {/* View mode toggle */}
         <div className="ml-auto">
           <Tabs value={viewMode} onValueChange={setViewMode}>
             <TabsList className="h-8">
@@ -537,7 +525,6 @@ const DocumentEditor = () => {
         </div>
       </div>
 
-      {/* Document content area */}
       <div className="flex-1 overflow-auto bg-transparent dark:bg-gray-900/30">
         <TabsContent value="edit" className="h-full">
           <div className="h-full p-8 flex justify-center">
@@ -570,7 +557,6 @@ const DocumentEditor = () => {
         
         <TabsContent value="files" className="h-full p-4">
           <div className="bg-white dark:bg-gray-800 h-full rounded-lg border shadow-sm overflow-hidden">
-            {/* File Explorer Header */}
             <div className="p-4 border-b flex justify-between items-center">
               <div className="text-sm font-medium">Explorador de Arquivos</div>
               <div className="flex items-center gap-2">
@@ -620,7 +606,6 @@ const DocumentEditor = () => {
               </div>
             </div>
             
-            {/* Breadcrumb */}
             <div className="p-2 border-b flex items-center text-sm">
               {breadcrumbPath.map((item, index) => (
                 <div key={item.id} className="flex items-center">
@@ -635,7 +620,6 @@ const DocumentEditor = () => {
               ))}
             </div>
             
-            {/* File List */}
             <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {currentFolder !== "root" && (
                 <div 
@@ -664,14 +648,12 @@ const DocumentEditor = () => {
                   }`}
                   onClick={(e) => {
                     if (e.ctrlKey || e.metaKey) {
-                      // Toggle selection with Ctrl/Cmd key
                       setSelectedItems(prev => 
                         prev.includes(item.id) 
                           ? prev.filter(id => id !== item.id)
                           : [...prev, item.id]
                       );
                     } else if (e.shiftKey && selectedItems.length > 0) {
-                      // Range selection with Shift key
                       const allIds = folderItems.map(i => i.id);
                       const lastSelectedIndex = allIds.indexOf(selectedItems[selectedItems.length - 1]);
                       const currentIndex = allIds.indexOf(item.id);
@@ -680,15 +662,11 @@ const DocumentEditor = () => {
                       const rangeIds = allIds.slice(start, end + 1);
                       setSelectedItems([...new Set([...selectedItems, ...rangeIds])]);
                     } else {
-                      // Regular click
                       setSelectedItems([item.id]);
                       
-                      // Double click to open
                       if ('name' in item && 'parent' in item) {
-                        // It's a folder
                         handleNavigateToFolder(item.id);
                       } else if ('type' in item) {
-                        // It's a document
                         setActiveDocument(item);
                         setContent(item.content);
                         setViewMode('edit');
@@ -697,17 +675,14 @@ const DocumentEditor = () => {
                   }}
                   onDoubleClick={() => {
                     if ('name' in item && 'parent' in item) {
-                      // It's a folder
                       handleNavigateToFolder(item.id);
                     } else if ('type' in item) {
-                      // It's a document
                       setActiveDocument(item);
                       setContent(item.content);
                       setViewMode('edit');
                     }
                   }}
                 >
-                  {/* Show folder or file icon */}
                   {'parent' in item ? (
                     <Folder size={20} className="text-yellow-500" />
                   ) : ('type' in item && item.type === 'spreadsheet') ? (
@@ -725,7 +700,6 @@ const DocumentEditor = () => {
         </TabsContent>
       </div>
 
-      {/* New Folder Dialog */}
       <Dialog open={isNewFolderDialogOpen} onOpenChange={setIsNewFolderDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -752,7 +726,6 @@ const DocumentEditor = () => {
         </DialogContent>
       </Dialog>
 
-      {/* New File Dialog */}
       <Dialog open={isNewFileDialogOpen} onOpenChange={setIsNewFileDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -795,7 +768,6 @@ const DocumentEditor = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Rename Dialog */}
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -822,7 +794,6 @@ const DocumentEditor = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Table Dialog */}
       <Dialog open={isTableDialogOpen} onOpenChange={setIsTableDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

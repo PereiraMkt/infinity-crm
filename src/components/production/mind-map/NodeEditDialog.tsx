@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -35,9 +34,9 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
   const [borderColor, setBorderColor] = useState<string>(node?.style?.borderColor || '#000000');
   const [textColor, setTextColor] = useState<string>(node?.style?.color || '#000000');
   const [borderStyle, setBorderStyle] = useState<string>(node?.style?.borderStyle || 'solid');
-  const [borderWidth, setBorderWidth] = useState<string>(node?.style?.borderWidth || '1px');
-  const [borderRadius, setBorderRadius] = useState<string>(node?.style?.borderRadius || '4px');
-  const [fontSize, setFontSize] = useState<string>(node?.style?.fontSize || '14px');
+  const [borderWidth, setBorderWidth] = useState<string>(node?.style?.borderWidth?.toString() || '1px');
+  const [borderRadius, setBorderRadius] = useState<string>(node?.style?.borderRadius?.toString() || '4px');
+  const [fontSize, setFontSize] = useState<string>(node?.style?.fontSize?.toString() || '14px');
   const [link, setLink] = useState(node?.data?.link || '');
   const [activeColorPicker, setActiveColorPicker] = useState<'background' | 'border' | 'text' | null>(null);
 
@@ -49,9 +48,9 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
       setBorderColor(node.style?.borderColor || '#000000');
       setTextColor(node.style?.color || '#000000');
       setBorderStyle(node.style?.borderStyle || 'solid');
-      setBorderWidth(node.style?.borderWidth || '1px');
-      setBorderRadius(node.style?.borderRadius || '4px');
-      setFontSize(node.style?.fontSize || '14px');
+      setBorderWidth(node.style?.borderWidth?.toString() || '1px');
+      setBorderRadius(node.style?.borderRadius?.toString() || '4px');
+      setFontSize(node.style?.fontSize?.toString() || '14px');
       setLink(node.data?.link || '');
     }
   }, [isOpen, node]);
