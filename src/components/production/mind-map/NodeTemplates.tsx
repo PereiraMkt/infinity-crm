@@ -1,6 +1,7 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { Node } from "reactflow";
+import React from "react";
 
 export interface NodeTemplate {
   id: string;
@@ -51,7 +52,7 @@ export const useNodeTemplates = () => {
   ];
   
   const createTemplateNode = (template: NodeTemplate, handleNodeFunctions: any) => {
-    const newNode = {
+    const newNode: Node & { style: React.CSSProperties } = {
       id: Date.now().toString(),
       type: "customNode",
       data: { 
@@ -65,8 +66,9 @@ export const useNodeTemplates = () => {
         y: Math.random() * 500,
       },
       style: {
-        backgroundColor: template.color
-      }
+        backgroundColor: template.color,
+        // explicitly type style as React.CSSProperties to avoid TS errors later
+      } as React.CSSProperties,
     };
     
     toast({
@@ -79,3 +81,4 @@ export const useNodeTemplates = () => {
   
   return { templates, createTemplateNode };
 };
+
