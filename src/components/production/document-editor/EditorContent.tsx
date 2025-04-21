@@ -1,60 +1,65 @@
 
-import React from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
+import { useEffect, useRef } from "react";
 
 interface EditorContentProps {
   content: string;
-  setContent?: (content: string) => void;
-  onUpdateContent?: (content: string) => void;
   fontFamily: string;
-  fontSize?: string;
-  textColor?: string;
-  backgroundColor?: string;
-  textAlignment?: string;
-  lineHeight?: string;
+  textColor: string;
+  backgroundColor: string;
+  textAlignment: string;
+  onUpdateContent: (content: string) => void;
 }
 
-const EditorContent: React.FC<EditorContentProps> = ({ 
-  content, 
-  setContent,
+const EditorContent = ({
+  content,
+  fontFamily,
+  textColor,
+  backgroundColor,
+  textAlignment,
   onUpdateContent,
-  fontFamily, 
-  fontSize = '16px',
-  textColor = 'black',
-  backgroundColor = 'transparent',
-  textAlignment = 'left',
-  lineHeight = '1.5'
-}) => {
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    if (setContent) {
-      setContent(newContent);
+}: EditorContentProps) => {
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  // Set up the editor on component mount
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = content.replace(/\n/g, "<br/>");
+      editorRef.current.focus();
     }
-    if (onUpdateContent) {
+  }, []);
+
+  // Handle input changes
+  const handleInput = () => {
+    if (editorRef.current) {
+      // Get content and update state
+      const newContent = editorRef.current.innerHTML.replace(/<br>/g, "\n");
       onUpdateContent(newContent);
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    // Get text only from clipboard to avoid pasted HTML formatting
+    const text = e.clipboardData.getData("text/plain");
+    // Insert at cursor position
+    document.execCommand("insertText", false, text);
+  };
+
   return (
-    <ScrollArea className="h-full">
-      <div className="p-4">
-        <Textarea
-          value={content}
-          onChange={handleChange}
-          className="w-full h-[500px] p-4 bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
-          placeholder="Comece a escrever seu documento..."
-          style={{ 
-            fontFamily, 
-            fontSize,
-            color: textColor !== 'default' ? textColor : undefined,
-            backgroundColor: backgroundColor !== 'default' ? backgroundColor : undefined,
-            textAlign: textAlignment as any,
-            lineHeight
-          }}
-        />
-      </div>
-    </ScrollArea>
+    <div
+      className="w-full h-full p-8 outline-none overflow-auto"
+      contentEditable={true}
+      ref={editorRef}
+      onInput={handleInput}
+      onPaste={handlePaste}
+      style={{
+        fontFamily,
+        color: textColor,
+        backgroundColor,
+        textAlign: textAlignment as "left" | "center" | "right" | "justify",
+      }}
+      spellCheck
+    />
   );
 };
 

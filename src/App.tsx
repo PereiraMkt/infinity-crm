@@ -11,8 +11,14 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import LoadingScreen from '@/components/ui/loading-screen';
 import { useThemeManager } from '@/hooks/useThemeManager';
 
-// Lazy-loaded components
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
+// Import custom animations
+import '@/styles/animations.css';
+
+// Lazy-loaded components with shorter timeouts for faster loading
+const Dashboard = lazy(() => Promise.race([
+  import('@/pages/Dashboard'),
+  new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+]));
 const SalesFunnel = lazy(() => import('@/pages/SalesFunnel'));
 const ClientManagement = lazy(() => import('@/pages/ClientManagement'));
 const FinanceManagement = lazy(() => import('@/pages/FinanceManagement'));
@@ -30,11 +36,14 @@ const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
+// Configure query client with better caching and retry logic
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1
+      retry: 1,
+      refetchOnWindowFocus: false, // Disable refetch on window focus for better performance
+      refetchOnReconnect: true,
     }
   }
 });
@@ -48,7 +57,6 @@ const App = () => {
   }
 
   return (
-    // Removed StrictMode for easier debugging
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <BrowserRouter>
@@ -75,19 +83,71 @@ const App = () => {
               {/* Protected routes that require authentication */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/app" element={<MainLayout />}>
-                  <Route index element={<Dashboard />} />
-                  <Route path="sales-funnel" element={<SalesFunnel />} />
-                  <Route path="clients" element={<ClientManagement />} />
-                  <Route path="finance" element={<FinanceManagement />} />
-                  <Route path="products" element={<ProductsServices />} />
-                  <Route path="lead-import" element={<LeadImport />} />
-                  <Route path="production" element={<ProductionManagement />} />
-                  <Route path="team" element={<TeamManagement />} />
-                  <Route path="meetings" element={<Meetings />} />
-                  <Route path="settings" element={<Settings />} />
-                  <Route path="user-settings" element={<UserSettings />} />
-                  <Route path="whatsapp" element={<WhatsAppIntegration />} />
-                  <Route path="ads-integration" element={<AdsIntegrationPage />} />
+                  <Route index element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <Dashboard />
+                    </Suspense>
+                  } />
+                  <Route path="sales-funnel" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <SalesFunnel />
+                    </Suspense>
+                  } />
+                  <Route path="clients" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <ClientManagement />
+                    </Suspense>
+                  } />
+                  <Route path="finance" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <FinanceManagement />
+                    </Suspense>
+                  } />
+                  <Route path="products" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <ProductsServices />
+                    </Suspense>
+                  } />
+                  <Route path="lead-import" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <LeadImport />
+                    </Suspense>
+                  } />
+                  <Route path="production" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <ProductionManagement />
+                    </Suspense>
+                  } />
+                  <Route path="team" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <TeamManagement />
+                    </Suspense>
+                  } />
+                  <Route path="meetings" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <Meetings />
+                    </Suspense>
+                  } />
+                  <Route path="settings" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <Settings />
+                    </Suspense>
+                  } />
+                  <Route path="user-settings" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <UserSettings />
+                    </Suspense>
+                  } />
+                  <Route path="whatsapp" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <WhatsAppIntegration />
+                    </Suspense>
+                  } />
+                  <Route path="ads-integration" element={
+                    <Suspense fallback={<LoadingScreen />}>
+                      <AdsIntegrationPage />
+                    </Suspense>
+                  } />
                 </Route>
               </Route>
               

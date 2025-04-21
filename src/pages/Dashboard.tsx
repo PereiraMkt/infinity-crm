@@ -41,9 +41,14 @@ const Dashboard = () => {
       
       <StatsSection />
       
-      {/* First row - Sales Chart (Vendas do mês) 100% width */}
-      <div className="grid grid-cols-1 gap-6">
-        <SalesChart data={mockSalesData} />
+      {/* First row - Sales Chart 60% + Integrated Funnel 40% */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-3">
+          <SalesChart data={mockSalesData} />
+        </div>
+        <div className="lg:col-span-2">
+          <IntegratedFunnel />
+        </div>
       </div>
       
       {/* Second row - Funnel Chart (Conversão de Funil) 100% width */}
@@ -51,14 +56,9 @@ const Dashboard = () => {
         <FunnelChart data={mockFunnelData} />
       </div>
       
-      {/* Third row - Finance Chart (DRE Simplificado) 50% + Integrated Funnel 50% */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3 order-2 lg:order-1">
-          <FinanceChart />
-        </div>
-        <div className="lg:col-span-2 order-1 lg:order-2">
-          <IntegratedFunnel />
-        </div>
+      {/* Third row - Finance Chart (DRE Simplificado) 100% */}
+      <div className="grid grid-cols-1 gap-6">
+        <FinanceChart />
       </div>
       
       {/* Fourth row - Activities 100% */}

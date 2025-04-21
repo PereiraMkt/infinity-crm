@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Maximize2, Minimize2, ScreenShare, Mic, MicOff, VideoOff, Video } from "lucide-react";
+import { X, Maximize2, Minimize2 } from "lucide-react";
 import VideoCall from "@/components/chat/VideoCall";
 import { cn } from "@/lib/utils";
 
@@ -16,13 +16,10 @@ interface MeetingVideoContainerProps {
 
 const MeetingVideoContainer = ({ meeting, onLeave }: MeetingVideoContainerProps) => {
   const [isMaximized, setIsMaximized] = useState(false);
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isVideoOn, setIsVideoOn] = useState(true);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Container size state for resizing
-  const [containerSize, setContainerSize] = useState({ width: '100%', height: '600px' });
+  const [containerSize, setContainerSize] = useState({ width: '100%', height: '85vh' });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -123,43 +120,6 @@ const MeetingVideoContainer = ({ meeting, onLeave }: MeetingVideoContainerProps)
       
       <div className="flex-1 overflow-hidden bg-black">
         <VideoCall onEndCall={onLeave} />
-      </div>
-      
-      <div className="p-3 flex justify-center border-t bg-muted/30">
-        <div className="flex gap-2">
-          <Button
-            variant={isMicOn ? "default" : "outline"}
-            size="icon"
-            className="h-10 w-10 rounded-full"
-            onClick={() => setIsMicOn(!isMicOn)}
-          >
-            {isMicOn ? <Mic size={20} /> : <MicOff size={20} />}
-          </Button>
-          <Button
-            variant={isVideoOn ? "default" : "outline"}
-            size="icon"
-            className="h-10 w-10 rounded-full"
-            onClick={() => setIsVideoOn(!isVideoOn)}
-          >
-            {isVideoOn ? <Video size={20} /> : <VideoOff size={20} />}
-          </Button>
-          <Button
-            variant={isScreenSharing ? "default" : "outline"}
-            size="icon"
-            className="h-10 w-10 rounded-full"
-            onClick={() => setIsScreenSharing(!isScreenSharing)}
-          >
-            <ScreenShare size={20} />
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            className="h-10 ml-4"
-            onClick={onLeave}
-          >
-            Sair da reunião
-          </Button>
-        </div>
       </div>
       
       {!isMaximized && (

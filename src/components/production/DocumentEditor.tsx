@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Pencil, Eye, ChevronLeft, ChevronRight, FileText, Folder, FolderPlus, FilePlus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,6 +32,7 @@ interface Document {
   textColor: string;
   backgroundColor: string;
   textAlignment: string;
+  pages?: number;
 }
 
 const DocumentEditor = () => {
@@ -67,9 +67,11 @@ const DocumentEditor = () => {
   const [isCreatingFile, setIsCreatingFile] = useState<boolean>(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState<boolean>(false);
   const [currentFolderId, setCurrentFolderId] = useState<string>("1");
+  const [fullscreenEdit, setFullscreenEdit] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   useEffect(() => {
-    // Set the first document as active by default
     if (folders.length > 0 && folders[0].files.length > 0 && !activeDocument) {
       setActiveDocument(folders[0].files[0]);
       setContent(folders[0].files[0].content);
@@ -77,6 +79,7 @@ const DocumentEditor = () => {
       setTextColor(folders[0].files[0].textColor);
       setBackgroundColor(folders[0].files[0].backgroundColor);
       setTextAlignment(folders[0].files[0].textAlignment);
+      setTotalPages(folders[0].files[0].pages || 1);
     }
   }, [folders, activeDocument]);
 
@@ -105,12 +108,18 @@ const DocumentEditor = () => {
 
   const handleUpdateContent = (newContent: string) => {
     setContent(newContent);
+    
+    const estimatedPages = Math.max(1, Math.ceil(newContent.length / 2000));
+    setTotalPages(estimatedPages);
+    
     if (activeDocument) {
-      // Update the content in the activeDocument
-      const updatedDocument = { ...activeDocument, content: newContent };
+      const updatedDocument = { 
+        ...activeDocument, 
+        content: newContent,
+        pages: estimatedPages
+      };
       setActiveDocument(updatedDocument);
       
-      // Update the content in the folders structure
       const updateDocumentInFolders = (folderList: DocumentFolder[]): DocumentFolder[] => {
         return folderList.map(folder => {
           const updatedFiles = folder.files.map(file => 
@@ -136,11 +145,9 @@ const DocumentEditor = () => {
     if (property === 'textAlignment') setTextAlignment(value);
     
     if (activeDocument) {
-      // Update the formatting in the activeDocument
       const updatedDocument = { ...activeDocument, [property]: value };
       setActiveDocument(updatedDocument);
       
-      // Update the formatting in the folders structure
       const updateDocumentInFolders = (folderList: DocumentFolder[]): DocumentFolder[] => {
         return folderList.map(folder => {
           const updatedFiles = folder.files.map(file => 
@@ -238,7 +245,6 @@ const DocumentEditor = () => {
     
     setFolders(updateFoldersRemoveDocument(folders));
     
-    // If active document is deleted, set the first available document as active
     if (activeDocument && activeDocument.id === documentId) {
       let firstAvailableDoc: Document | null = null;
       
@@ -338,6 +344,8 @@ const DocumentEditor = () => {
               setTextColor(file.textColor);
               setBackgroundColor(file.backgroundColor);
               setTextAlignment(file.textAlignment);
+              setTotalPages(file.pages || 1);
+              setCurrentPage(1);
             }}
             className={activeDocument?.id === file.id ? "bg-primary/10" : ""}
             actions={
@@ -359,126 +367,174 @@ const DocumentEditor = () => {
 
   return (
     <div className="h-[calc(100vh-13rem)] flex">
-      {/* Documents Sidebar */}
-      <div 
-        className={cn(
-          "flex-shrink-0 border-r transition-all duration-300 flex flex-col",
-          sidebarOpen ? "w-[240px]" : "w-0 overflow-hidden"
-        )}
-      >
-        <div className="flex items-center justify-between p-3 border-b">
-          <h2 className="font-medium text-sm">Documentos</h2>
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-7 w-7"
-              onClick={() => {
-                setCurrentFolderId("1");
-                setIsCreatingFile(true);
-              }}
-            >
-              <FilePlus className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-7 w-7"
-              onClick={() => {
-                setCurrentFolderId("1");
-                setIsCreatingFolder(true);
-              }}
-            >
-              <FolderPlus className="h-4 w-4" />
-            </Button>
+      {!fullscreenEdit && (
+        <div 
+          className={cn(
+            "flex-shrink-0 border-r transition-all duration-300 flex flex-col",
+            sidebarOpen ? "w-[240px]" : "w-0 overflow-hidden"
+          )}
+        >
+          <div className="flex items-center justify-between p-3 border-b">
+            <h2 className="font-medium text-sm">Documentos</h2>
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7"
+                onClick={() => {
+                  setCurrentFolderId("1");
+                  setIsCreatingFile(true);
+                }}
+              >
+                <FilePlus className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7"
+                onClick={() => {
+                  setCurrentFolderId("1");
+                  setIsCreatingFolder(true);
+                }}
+              >
+                <FolderPlus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-auto p-2">
+            <Tree>
+              {renderTreeItems(folders)}
+            </Tree>
+            
+            {isCreatingFile && (
+              <div className="mt-2 p-2 bg-secondary/50 rounded-md">
+                <Input
+                  placeholder="Nome do documento"
+                  value={newItemName}
+                  onChange={(e) => setNewItemName(e.target.value)}
+                  className="mb-2 text-xs"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" onClick={() => {
+                    setIsCreatingFile(false);
+                    setNewItemName("");
+                  }}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={handleCreateFile}>
+                    Criar
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {isCreatingFolder && (
+              <div className="mt-2 p-2 bg-secondary/50 rounded-md">
+                <Input
+                  placeholder="Nome da pasta"
+                  value={newItemName}
+                  onChange={(e) => setNewItemName(e.target.value)}
+                  className="mb-2 text-xs"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="outline" onClick={() => {
+                    setIsCreatingFolder(false);
+                    setNewItemName("");
+                  }}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={handleCreateFolder}>
+                    Criar
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+      )}
 
-        <div className="flex-1 overflow-auto p-2">
-          <Tree>
-            {renderTreeItems(folders)}
-          </Tree>
-          
-          {isCreatingFile && (
-            <div className="mt-2 p-2 bg-secondary/50 rounded-md">
-              <Input
-                placeholder="Nome do documento"
-                value={newItemName}
-                onChange={(e) => setNewItemName(e.target.value)}
-                className="mb-2 text-xs"
-                autoFocus
-              />
-              <div className="flex justify-end gap-2">
-                <Button size="sm" variant="outline" onClick={() => {
-                  setIsCreatingFile(false);
-                  setNewItemName("");
-                }}>
-                  Cancelar
-                </Button>
-                <Button size="sm" onClick={handleCreateFile}>
-                  Criar
-                </Button>
-              </div>
-            </div>
-          )}
-          
-          {isCreatingFolder && (
-            <div className="mt-2 p-2 bg-secondary/50 rounded-md">
-              <Input
-                placeholder="Nome da pasta"
-                value={newItemName}
-                onChange={(e) => setNewItemName(e.target.value)}
-                className="mb-2 text-xs"
-                autoFocus
-              />
-              <div className="flex justify-end gap-2">
-                <Button size="sm" variant="outline" onClick={() => {
-                  setIsCreatingFolder(false);
-                  setNewItemName("");
-                }}>
-                  Cancelar
-                </Button>
-                <Button size="sm" onClick={handleCreateFolder}>
-                  Criar
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {!fullscreenEdit && (
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute top-4 left-0 z-10 h-7 w-7 bg-card shadow-md rounded-r-md rounded-l-none border-l-0"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </Button>
+      )}
 
-      {/* Toggle Sidebar Button */}
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="absolute top-4 left-0 z-10 h-7 w-7 bg-card shadow-md rounded-r-md rounded-l-none border-l-0"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        {sidebarOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-      </Button>
-
-      {/* Editor */}
-      <div className="flex-1 flex flex-col">
+      <div className={cn("flex-1 flex flex-col", fullscreenEdit ? "fixed inset-0 z-50 bg-background" : "")}>
         <div className="border-b p-2 flex justify-between items-center">
           <div className="flex items-center gap-2">
+            {fullscreenEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setFullscreenEdit(false)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            )}
             <h3 className="font-medium text-sm">{activeDocument?.name || "Sem título"}</h3>
+            
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2 ml-4">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                >
+                  <ChevronLeft className="h-3 w-3" />
+                </Button>
+                <span className="text-xs">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                >
+                  <ChevronRight className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
           </div>
-          <Tabs 
-            value={view} 
-            onValueChange={(v) => setView(v as "edit" | "preview")}
-            className="ml-auto"
-          >
-            <TabsList className="h-8">
-              <TabsTrigger value="edit" className="text-xs px-3">
-                <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                Editar
-              </TabsTrigger>
-              <TabsTrigger value="preview" className="text-xs px-3">
-                <Eye className="h-3.5 w-3.5 mr-1.5" />
-                Visualizar
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 flex items-center gap-1"
+              onClick={() => setFullscreenEdit(!fullscreenEdit)}
+            >
+              {fullscreenEdit ? "Sair da Tela Cheia" : "Tela Cheia"}
+            </Button>
+            
+            <Tabs 
+              value={view} 
+              onValueChange={(v) => setView(v as "edit" | "preview")}
+            >
+              <TabsList className="h-8">
+                <TabsTrigger value="edit" className="text-xs px-3">
+                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                  Editar
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="text-xs px-3">
+                  <Eye className="h-3.5 w-3.5 mr-1.5" />
+                  Visualizar
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
         
         {view === "edit" && (

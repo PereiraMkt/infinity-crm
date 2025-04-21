@@ -1,103 +1,119 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { toast } from 'sonner';
-import { registerUser } from "@/lib/registerUser";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { User, Session, AuthError } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { loginUser } from "@/lib/loginUser";
 import { hydrateUser } from "@/lib/hydrateUser";
-import { UserProfile } from '@/types/user';
-import { Company } from '@/types/company';
+import { toast } from "sonner";
+import LoadingScreen from "@/components/ui/loading-screen";
 
-type AuthContextType = {
-  session: Session | null;
+interface AuthContextType {
   user: User | null;
-  profile: UserProfile | null;
-  company: Company | null;
+  session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string, isCompany: boolean) => Promise<void>;
   signOut: () => Promise<void>;
-};
+  profile: any;
+  company: any;
+}
+
+interface WeakPassword {
+  message: string;
+  suggestions: string[];
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [company, setCompany] = useState<Company | null>(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { toast: toastNotification } = useToast();
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<{
+    user: User | null;
+    session: Session | null;
+    profile: any;
+    company: any;
+    loading: boolean;
+  }>({
+    user: null,
+    session: null,
+    profile: null,
+    company: null,
+    loading: true
+  });
 
-  // Função para buscar dados de perfil e empresa
-  const fetchUserData = async (userId: string) => {
-    try {
-      console.log("Buscando dados do usuário:", userId);
-      const result = await hydrateUser();
-      
-      if (result.profile) {
-        console.log("Perfil encontrado:", result.profile);
-        setProfile(result.profile);
-      }
-      
-      if (result.company) {
-        console.log("Empresa encontrada:", result.company);
-        setCompany(result.company);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar dados do usuário:", error);
-    }
-  };
+  const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Inicializando AuthContext");
+    console.info("Inicializando AuthContext");
     
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        console.log("Evento de autenticação:", event, currentSession?.user?.id);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        // Use setTimeout to avoid deadlock with Supabase client
-        if (currentSession?.user) {
-          setTimeout(() => {
-            fetchUserData(currentSession.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
-          setCompany(null);
-        }
-        
-        setLoading(false);
-        
-        if (event === 'SIGNED_OUT') {
-          navigate('/login');
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          // Check if on login or register page, redirect to app
-          const path = window.location.pathname;
-          if (path === '/login' || path === '/register') {
-            navigate('/app');
+    // Set up the auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.info("Evento de autenticação:", event, session?.user?.id);
+      
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          try {
+            // Use setTimeout to prevent deadlocks with Supabase auth
+            setTimeout(async () => {
+              const hydrationResult = await hydrateUser(session.user.id);
+              setState({
+                user: session.user,
+                session,
+                profile: hydrationResult.profile,
+                company: hydrationResult.company,
+                loading: false
+              });
+            }, 0);
+          } catch (error) {
+            console.error("Erro na hidratação do usuário:", error);
+            setState({
+              user: session.user,
+              session,
+              profile: null,
+              company: null,
+              loading: false
+            });
           }
         }
+      } else if (event === 'SIGNED_OUT') {
+        setState({ user: null, session: null, profile: null, company: null, loading: false });
+        navigate('/login', { replace: true });
+      } else if (event === 'INITIAL_SESSION') {
+        console.info("Sessão existente:", session);
+        if (session) {
+          try {
+            // Use setTimeout to prevent deadlocks with Supabase auth
+            setTimeout(async () => {
+              const hydrationResult = await hydrateUser(session.user.id);
+              setState({
+                user: session.user,
+                session,
+                profile: hydrationResult.profile,
+                company: hydrationResult.company,
+                loading: false
+              });
+            }, 0);
+          } catch (error) {
+            console.error("Erro na hidratação do usuário:", error);
+            setState({
+              user: session.user,
+              session,
+              profile: null,
+              company: null,
+              loading: false
+            });
+          }
+        } else {
+          setState(prev => ({ ...prev, loading: false }));
+        }
       }
-    );
+    });
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log("Sessão existente:", currentSession?.user?.id);
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        fetchUserData(currentSession.user.id);
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        setState(prev => ({ ...prev, loading: false }));
       }
-      
-      setLoading(false);
     });
 
     return () => {
@@ -105,127 +121,117 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [navigate]);
 
-  const signIn = async (email: string, password: string) => {
-    setLoading(true);
+  async function signIn(email: string, password: string) {
     try {
-      console.log("Iniciando tentativa de login...");
+      const { user, session } = await loginUser(email, password);
       
-      // Validar senha
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-      if (!passwordRegex.test(password)) {
-        throw new Error("A senha deve conter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e caracteres especiais.");
+      if (user) {
+        const hydrationResult = await hydrateUser(user.id);
+        setState({
+          user,
+          session,
+          profile: hydrationResult.profile,
+          company: hydrationResult.company,
+          loading: false
+        });
+        
+        navigate('/app', { replace: true });
+        toast.success("Login realizado com sucesso!");
+      }
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      let errorMessage = "Erro ao fazer login. Tente novamente.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Credenciais inválidas. Verifique seu email e senha.";
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Email não confirmado. Verifique sua caixa de entrada.";
+        }
       }
       
-      await loginUser(email, password);
-      
-      // Login bem-sucedido, buscar perfil e empresa
-      try {
-        const userData = await hydrateUser();
-        if (userData.profile) setProfile(userData.profile);
-        if (userData.company) setCompany(userData.company);
-      } catch (error) {
-        console.error("Erro ao buscar dados do usuário após login:", error);
-      }
-      
-      toast.success('Login realizado com sucesso!');
-      await new Promise((resolve) => setTimeout(resolve, 900)); // Breve delay visual
-      navigate('/app');
-    } catch (error: any) {
-      console.error('Erro ao fazer login:', error.message);
-      
-      let errorMessage = 'Erro ao fazer login. Tente novamente.';
-      if (error.message.includes('Invalid login credentials')) {
-        errorMessage = 'Email ou senha incorretos. Verifique suas credenciais.';
-      } else if (error.message.includes('A senha deve conter')) {
-        errorMessage = error.message;
-      }
-      
-      toastNotification({
-        title: 'Erro de autenticação',
-        description: errorMessage,
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
+      toast.error(errorMessage);
+      throw error;
     }
-  };
+  }
 
-  const signUp = async (email: string, password: string, name: string, isCompany: boolean) => {
-    setLoading(true);
+  async function signUp(email: string, password: string, name: string, isCompany: boolean) {
     try {
-      console.log("Iniciando processo de registro...");
-      // Registrar o usuário
-      const result = await registerUser({ name, email, password, isCompany });
-      console.log("Registro concluído, resultado:", result);
-      
-      // Buscar dados do usuário após registro bem-sucedido
-      if (result.user) {
-        // Buscar dados do perfil e empresa
-        const userData = await hydrateUser();
-        if (userData.profile) setProfile(userData.profile);
-        if (userData.company) setCompany(userData.company);
-      }
-      
-      toast.success('Cadastro realizado com sucesso!');
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      navigate('/app');
-    } catch (error: any) {
-      console.error('Erro ao criar conta:', error.message);
-      
-      let errorMessage = 'Erro ao criar conta. Tente novamente.';
-      if (error.message.includes('User already registered')) {
-        errorMessage = 'Este email já está cadastrado. Tente fazer login.';
-      } else if (error.message.includes('Password should be at least')) {
-        errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
-      } else if (error.message.includes('Email format is invalid')) {
-        errorMessage = 'O formato do email é inválido.';
-      } else {
-        errorMessage = error.message;
-      }
-      
-      toastNotification({
-        title: 'Erro no cadastro',
-        description: errorMessage,
-        variant: 'destructive'
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            is_company: isCompany
+          }
+        }
       });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const signOut = async () => {
+      if (error) throw error;
+
+      if (data.user) {
+        toast.success("Conta criada com sucesso! Você será redirecionado para o dashboard.");
+        navigate('/app', { replace: true });
+      }
+    } catch (error: any) {
+      console.error("Erro ao criar conta:", error);
+      let errorMessage = "Erro ao criar conta. Tente novamente.";
+      
+      if (error instanceof AuthError) {
+        if (error.message.includes("User already registered")) {
+          errorMessage = "Este email já está registrado. Tente fazer login.";
+        } else if (error.message.includes("Password should be")) {
+          errorMessage = "A senha não atende aos requisitos de segurança.";
+        }
+      }
+      
+      toast.error(errorMessage);
+      throw error;
+    }
+  }
+
+  async function signOut() {
     try {
-      await supabase.auth.signOut();
-      setProfile(null);
-      setCompany(null);
-      toast.info('Você saiu do sistema');
-      navigate('/login');
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // Explicitly update state and navigate after signout
+      setState({ user: null, session: null, profile: null, company: null, loading: false });
+      toast.info("Sessão encerrada com sucesso");
+      navigate('/login', { replace: true });
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
-      toast.error("Erro ao sair do sistema");
+      toast.error("Erro ao encerrar sessão");
     }
+  }
+
+  const value = {
+    user: state.user,
+    session: state.session,
+    loading: state.loading,
+    signIn,
+    signUp,
+    signOut,
+    profile: state.profile,
+    company: state.company
   };
 
+  if (state.loading) {
+    return <LoadingScreen />;
+  }
+
   return (
-    <AuthContext.Provider value={{ 
-      session, 
-      user, 
-      profile, 
-      company, 
-      loading, 
-      signIn, 
-      signUp, 
-      signOut 
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

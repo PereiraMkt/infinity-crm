@@ -12,6 +12,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import LoadingScreen from '@/components/ui/loading-screen';
+import { toast } from 'sonner';
 
 const passwordRules = "Ao menos 8 caracteres, letras maiúsculas, minúsculas, número e caractere especial";
 
@@ -46,6 +47,8 @@ const Login = () => {
     setIsSubmitting(true);
     try {
       await signIn(values.email, values.password);
+    } catch (error) {
+      // Error handling done in the signIn function
     } finally {
       setIsSubmitting(false);
     }

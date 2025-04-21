@@ -1,8 +1,6 @@
 
-import { Filter, Plus, Download, PieChart } from "lucide-react";
-import { SectionHeader, ActionButton } from "@/components/ui/section-header";
-import { FilterMenu } from "./FilterMenu";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Filter, Download, Plus, BarChart2 } from "lucide-react";
 
 interface FunnelHeaderProps {
   showAnalytics: boolean;
@@ -12,52 +10,53 @@ interface FunnelHeaderProps {
   onAddNewLead: () => void;
 }
 
-export const FunnelHeader = ({
-  showAnalytics,
-  setShowAnalytics,
-  filterMenuOpen,
+export function FunnelHeader({ 
+  showAnalytics, 
+  setShowAnalytics, 
+  filterMenuOpen, 
   setFilterMenuOpen,
-  onAddNewLead
-}: FunnelHeaderProps) => {
-  const { toast } = useToast();
-  
+  onAddNewLead 
+}: FunnelHeaderProps) {
   return (
-    <SectionHeader 
-      title="Funil de Vendas" 
-      description="Gerencie seus leads e oportunidades"
-      actions={
-        <>
-          <FilterMenu 
-            open={filterMenuOpen} 
-            onOpenChange={setFilterMenuOpen} 
-          />
-          
-          <ActionButton
-            icon={<PieChart size={16} />}
-            label="Analytics"
-            onClick={() => setShowAnalytics(!showAnalytics)}
-            variant={showAnalytics ? "default" : "outline"}
-          />
-          
-          <ActionButton
-            icon={<Download size={16} />}
-            label="Exportar"
-            onClick={() => {
-              toast({
-                title: "Exportação iniciada",
-                description: "O arquivo será baixado em instantes",
-              });
-            }}
-            variant="outline"
-          />
-          
-          <ActionButton
-            icon={<Plus size={16} />}
-            label="Novo Lead"
-            onClick={onAddNewLead}
-          />
-        </>
-      }
-    />
+    <div className="flex flex-wrap justify-between items-center gap-2 p-2 bg-card/80 dark:bg-gray-800/40 backdrop-blur-md shadow-md rounded-md">
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-8 flex items-center gap-1"
+          onClick={() => setFilterMenuOpen(!filterMenuOpen)}
+        >
+          <Filter className="h-4 w-4" />
+          <span className="text-xs">Filtrar</span>
+        </Button>
+        
+        <Button 
+          variant={showAnalytics ? "default" : "outline"}
+          size="sm" 
+          className="h-8 flex items-center gap-1"
+          onClick={() => setShowAnalytics(!showAnalytics)}
+        >
+          <BarChart2 className="h-4 w-4" />
+          <span className="text-xs">Analytics</span>
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-8 flex items-center gap-1"
+        >
+          <Download className="h-4 w-4" />
+          <span className="text-xs">Exportar</span>
+        </Button>
+      </div>
+      
+      <Button 
+        size="sm" 
+        className="h-8 flex items-center gap-1"
+        onClick={onAddNewLead}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+    </div>
   );
-};
+}
