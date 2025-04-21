@@ -181,11 +181,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
-    setCompany(null);
-    toast.info('Você saiu do sistema');
-    navigate('/login');
+    try {
+      await supabase.auth.signOut();
+      setProfile(null);
+      setCompany(null);
+      toast.info('Você saiu do sistema');
+      navigate('/login');
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      toast.error("Erro ao sair do sistema");
+    }
   };
 
   return (

@@ -18,7 +18,7 @@ export async function registerUser({ name, email, password, isCompany }: Registe
   }
 
   try {
-    console.log("Iniciando registro de usuário...");
+    console.log("Iniciando registro de usuário:", email);
     
     // Etapa 1: criar usuário no Supabase Auth
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -72,16 +72,16 @@ export async function registerUser({ name, email, password, isCompany }: Registe
     
     console.log("Sessão válida obtida com token de acesso");
 
+    // Pequena pausa para garantir que o token seja propagado
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     // Etapa 3: criar empresa se for company
     let companyId: string | undefined = undefined;
     
     if (isCompany) {
       console.log("Criando registro de empresa...");
       
-      // Reconfigurar o cliente com a sessão atual para garantir autenticação
-      const authedClient = supabase;
-      
-      const { data: companyInsert, error: companyError } = await authedClient
+      const { data: companyInsert, error: companyError } = await supabase
         .from("companies")
         .insert([{ 
           name, 

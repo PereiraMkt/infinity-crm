@@ -6,7 +6,13 @@ import { Company } from "@/types/company";
 export async function hydrateUser() {
   console.log("Iniciando hidratação dos dados do usuário...");
   
-  const { data: sessionData } = await supabase.auth.getSession();
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError) {
+    console.error("Erro ao obter sessão:", sessionError);
+    throw new Error("Não foi possível obter a sessão do usuário");
+  }
+  
   const userId = sessionData?.session?.user?.id;
   
   if (!userId) {
@@ -38,11 +44,12 @@ export async function hydrateUser() {
       .eq("id", profile.company_id)
       .single();
       
-    if (!companyError) {
+    if (companyError) {
+      console.error("Erro ao buscar empresa:", companyError);
+      console.log("Continuando sem dados da empresa");
+    } else {
       console.log("Empresa encontrada:", companyData);
       company = companyData;
-    } else {
-      console.error("Erro ao buscar empresa:", companyError);
     }
   }
 
