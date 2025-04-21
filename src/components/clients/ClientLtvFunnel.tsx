@@ -19,6 +19,8 @@ const initialColumns: KanbanColumnItem[] = [
           { label: "Tecnologia", color: "bg-blue-100 text-blue-800" },
           { label: "SaaS", color: "bg-green-100 text-green-800" }
         ],
+        priority: "medium",
+        completion: 0,
         metadata: {
           value: "R$ 2.500,00",
           assignee: "Carlos Silva",
@@ -33,13 +35,16 @@ const initialColumns: KanbanColumnItem[] = [
           { label: "Startup", color: "bg-purple-100 text-purple-800" },
           { label: "Desenvolvimento", color: "bg-cyan-100 text-cyan-800" }
         ],
+        priority: "medium",
+        completion: 0,
         metadata: {
           value: "R$ 8.000,00",
           assignee: "Ana Oliveira",
           date: "15/04/2023"
         }
       }
-    ]
+    ],
+    color: "bg-gray-200 dark:bg-gray-700"
   },
   {
     id: "ltv-active",
@@ -53,6 +58,8 @@ const initialColumns: KanbanColumnItem[] = [
           { label: "Consultoria", color: "bg-yellow-100 text-yellow-800" },
           { label: "Recorrente", color: "bg-orange-100 text-orange-800" }
         ],
+        priority: "medium",
+        completion: 50,
         metadata: {
           value: "R$ 5.000,00/mês",
           assignee: "Marcos Souza",
@@ -67,13 +74,16 @@ const initialColumns: KanbanColumnItem[] = [
           { label: "Indústria", color: "bg-blue-100 text-blue-800" },
           { label: "B2B", color: "bg-green-100 text-green-800" }
         ],
+        priority: "medium",
+        completion: 50,
         metadata: {
           value: "R$ 12.000,00/mês",
           assignee: "Paula Andrade",
           date: "Desde 15/02/2023"
         }
       }
-    ]
+    ],
+    color: "bg-blue-200 dark:bg-blue-900"
   },
   {
     id: "ltv-growth",
@@ -87,13 +97,16 @@ const initialColumns: KanbanColumnItem[] = [
           { label: "Tecnologia", color: "bg-blue-100 text-blue-800" },
           { label: "Expansão", color: "bg-purple-100 text-purple-800" }
         ],
+        priority: "medium",
+        completion: 75,
         metadata: {
           value: "R$ 15.000,00/mês",
           assignee: "Roberto Alves",
           date: "Cliente desde 2022"
         }
       }
-    ]
+    ],
+    color: "bg-purple-200 dark:bg-purple-900"
   },
   {
     id: "ltv-loyalty",
@@ -107,13 +120,16 @@ const initialColumns: KanbanColumnItem[] = [
           { label: "Varejo", color: "bg-pink-100 text-pink-800" },
           { label: "Parceria", color: "bg-indigo-100 text-indigo-800" }
         ],
+        priority: "medium",
+        completion: 90,
         metadata: {
           value: "R$ 250.000,00/ano",
           assignee: "Joana Lima",
           date: "Cliente desde 2019"
         }
       }
-    ]
+    ],
+    color: "bg-indigo-200 dark:bg-indigo-900"
   },
   {
     id: "ltv-advocate",
@@ -127,13 +143,16 @@ const initialColumns: KanbanColumnItem[] = [
           { label: "Corporativo", color: "bg-gray-100 text-gray-800" },
           { label: "Indicações", color: "bg-amber-100 text-amber-800" }
         ],
+        priority: "medium",
+        completion: 100,
         metadata: {
           value: "R$ 500.000,00/ano",
           assignee: "Felipe Costa",
           date: "Cliente desde 2018"
         }
       }
-    ]
+    ],
+    color: "bg-amber-200 dark:bg-amber-900"
   }
 ];
 

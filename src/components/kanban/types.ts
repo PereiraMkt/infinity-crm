@@ -1,3 +1,4 @@
+
 export interface KanbanCardItem {
   id: string;
   title: string;
@@ -18,6 +19,24 @@ export interface KanbanCardItem {
     estimated: number;
     completed: boolean;
   }>;
+  tags?: Array<{
+    label: string;
+    color: string;
+  }>;
+  value?: number;
+  checklist?: Array<{
+    id: string;
+    text: string;
+    completed: boolean;
+  }>;
+  links?: Array<{
+    url: string;
+    label?: string;
+  }>;
+  metadata?: {
+    [key: string]: string;
+  };
+  dueDate?: string;
 }
 
 export interface KanbanColumnItem {

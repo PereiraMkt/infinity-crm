@@ -88,6 +88,11 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
 
   if (!node) return null;
 
+  // Fixed type casting for string values
+  const borderWidthString = String(borderWidth);
+  const borderRadiusString = String(borderRadius);
+  const fontSizeString = String(fontSize);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
@@ -200,7 +205,7 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
                   
                   <div>
                     <Label htmlFor="border-width">Espessura da Borda</Label>
-                    <Select value={borderWidth} onValueChange={setBorderWidth}>
+                    <Select value={borderWidthString} onValueChange={setBorderWidth}>
                       <SelectTrigger id="border-width" className="w-full">
                         <SelectValue placeholder="Espessura" />
                       </SelectTrigger>
@@ -215,7 +220,7 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
                   
                   <div>
                     <Label htmlFor="border-radius">Arredondamento</Label>
-                    <Select value={borderRadius} onValueChange={setBorderRadius}>
+                    <Select value={borderRadiusString} onValueChange={setBorderRadius}>
                       <SelectTrigger id="border-radius" className="w-full">
                         <SelectValue placeholder="Arredondamento" />
                       </SelectTrigger>
@@ -231,7 +236,7 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
                   
                   <div>
                     <Label htmlFor="font-size">Tamanho da Fonte</Label>
-                    <Select value={fontSize} onValueChange={setFontSize}>
+                    <Select value={fontSizeString} onValueChange={setFontSize}>
                       <SelectTrigger id="font-size" className="w-full">
                         <SelectValue placeholder="Tamanho" />
                       </SelectTrigger>
@@ -259,10 +264,10 @@ const NodeEditDialog = ({ isOpen, onClose, node, onSave }: NodeEditDialogProps) 
                 borderColor,
                 color: textColor,
                 borderStyle,
-                borderWidth,
-                borderRadius,
-                fontSize,
-                border: `${borderWidth} ${borderStyle} ${borderColor}`
+                borderWidth: borderWidthString,
+                borderRadius: borderRadiusString,
+                fontSize: fontSizeString,
+                border: `${borderWidthString} ${borderStyle} ${borderColor}`
               }}
             >
               {label || "Texto do Nó"}
