@@ -11,7 +11,8 @@ import {
   Node,
   Edge,
   useReactFlow,
-  NodeChange
+  NodeChange,
+  Viewport
 } from "reactflow";
 import { useToast } from "@/hooks/use-toast";
 import CustomNode from "./CustomNode";
@@ -188,17 +189,15 @@ function MindMapFlow() {
 
   // Fixed viewport handling
   const handleZoomIn = () => {
-    setViewport(viewport => ({
-      x: viewport.x,
-      y: viewport.y,
+    setViewport((viewport: Viewport) => ({
+      ...viewport,
       zoom: viewport.zoom * 1.1, // Increase zoom level
     }));
   };
 
   const handleZoomOut = () => {
-    setViewport(viewport => ({
-      x: viewport.x, 
-      y: viewport.y,
+    setViewport((viewport: Viewport) => ({
+      ...viewport,
       zoom: viewport.zoom * 0.9, // Decrease zoom level
     }));
   };

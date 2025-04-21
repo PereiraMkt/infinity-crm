@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sidebar } from "@/components/layout/Sidebar";
+import Sidebar from "@/components/navigation/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,7 +62,6 @@ const MainLayout = () => {
       <Sidebar 
         open={sidebarOpen} 
         setOpen={setSidebarOpen} 
-        isMobileView={isMobileView} 
       />
 
       {/* Main content area */}

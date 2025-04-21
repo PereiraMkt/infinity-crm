@@ -14,11 +14,12 @@ import { useThemeManager } from '@/hooks/useThemeManager';
 // Import custom animations
 import '@/styles/animations.css';
 
-// Lazy-loaded components with shorter timeouts for faster loading
-const Dashboard = lazy(() => Promise.race([
-  import('@/pages/Dashboard'),
-  new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-]));
+// Lazy-loaded components with proper promise handling
+const Dashboard = lazy(() => import('@/pages/Dashboard').catch(() => {
+  console.error('Failed to load Dashboard component');
+  return { default: () => <div>Error loading Dashboard</div> };
+}));
+
 const SalesFunnel = lazy(() => import('@/pages/SalesFunnel'));
 const ClientManagement = lazy(() => import('@/pages/ClientManagement'));
 const FinanceManagement = lazy(() => import('@/pages/FinanceManagement'));

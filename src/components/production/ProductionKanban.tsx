@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { KanbanBoard } from "../kanban/KanbanBoard";
+import KanbanBoard from "../kanban/KanbanBoard";
 import type { KanbanColumnItem } from "../kanban/types";
 
 interface ProductionKanbanProps {
