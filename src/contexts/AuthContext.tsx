@@ -1,10 +1,12 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
+import { registerUser } from "@/lib/registerUser";
+import { loginUser } from "@/lib/loginUser";
+import { hydrateUser } from "@/lib/hydrateUser";
 
 type AuthContextType = {
   session: Session | null;
@@ -25,7 +27,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast: toastNotification } = useToast();
 
   useEffect(() => {
-    // Configurar listener para mudanças no estado de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         setSession(currentSession);
@@ -38,7 +39,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // Verificar se já existe uma sessão ativa
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
@@ -51,17 +51,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
+    setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error) throw error;
-      
+      await loginUser(email, password);
       toast.success('Login realizado com sucesso!');
+      await new Promise((resolve) => setTimeout(resolve, 900)); // Breve delay visual
       navigate('/app');
     } catch (error: any) {
       console.error('Erro ao fazer login:', error.message);
       
-      // Mapeamento de mensagens de erro amigáveis
       let errorMessage = 'Erro ao fazer login. Tente novamente.';
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Email ou senha incorretos. Verifique suas credenciais.';
@@ -72,55 +70,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: errorMessage,
         variant: 'destructive'
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, name: string, isCompany: boolean) => {
+    setLoading(true);
     try {
-      // Cria o usuário no Supabase Auth
-      const { error: signUpError, data } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name
-          }
-        }
-      });
-      
-      if (signUpError) throw signUpError;
-      
-      // Se for uma empresa, criar registro na tabela companies
-      if (isCompany && data?.user) {
-        const { error: companyError } = await supabase.from('companies').insert({
-          name,
-          email,
-          owner_id: data.user.id
-        });
-        
-        if (companyError) throw companyError;
-        
-        // Atualizar o perfil do usuário com o ID da empresa
-        const { data: companyData } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('owner_id', data.user.id)
-          .single();
-          
-        if (companyData) {
-          await supabase
-            .from('profiles')
-            .update({ company_id: companyData.id, role: 'admin' })
-            .eq('id', data.user.id);
-        }
-      }
-      
+      await registerUser({ name, email, password, isCompany });
       toast.success('Cadastro realizado com sucesso!');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate('/app');
     } catch (error: any) {
       console.error('Erro ao criar conta:', error.message);
       
-      // Mapeamento de mensagens de erro amigáveis
       let errorMessage = 'Erro ao criar conta. Tente novamente.';
       if (error.message.includes('User already registered')) {
         errorMessage = 'Este email já está cadastrado. Tente fazer login.';
@@ -135,6 +99,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: errorMessage,
         variant: 'destructive'
       });
+    } finally {
+      setLoading(false);
     }
   };
 

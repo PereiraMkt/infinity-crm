@@ -9,30 +9,92 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      clients: {
+        Row: {
+          city: string | null
+          company_id: string | null
+          contact: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          last_contact: string | null
+          name: string
+          phone: string | null
+          segment: string | null
+          state: string | null
+          status: string | null
+          street: string | null
+          updated_at: string | null
+          zip: string | null
+        }
+        Insert: {
+          city?: string | null
+          company_id?: string | null
+          contact?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_contact?: string | null
+          name: string
+          phone?: string | null
+          segment?: string | null
+          state?: string | null
+          status?: string | null
+          street?: string | null
+          updated_at?: string | null
+          zip?: string | null
+        }
+        Update: {
+          city?: string | null
+          company_id?: string | null
+          contact?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_contact?: string | null
+          name?: string
+          phone?: string | null
+          segment?: string | null
+          state?: string | null
+          status?: string | null
+          street?: string | null
+          updated_at?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
-          created_at: string
-          email: string
+          created_at: string | null
+          email: string | null
           id: string
           name: string
           owner_id: string | null
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
-          email: string
+          created_at?: string | null
+          email?: string | null
           id?: string
           name: string
           owner_id?: string | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
-          email?: string
+          created_at?: string | null
+          email?: string | null
           id?: string
           name?: string
           owner_id?: string | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -40,43 +102,52 @@ export type Database = {
         Row: {
           assigned_to: string | null
           company_id: string | null
-          created_at: string
-          created_by: string | null
+          created_at: string | null
           description: string | null
           due_date: string | null
+          email: string | null
           id: string
+          name: string
+          phone: string | null
           priority: string | null
+          source: string | null
           status: string | null
           title: string
-          updated_at: string
+          updated_at: string | null
           value: number | null
         }
         Insert: {
           assigned_to?: string | null
           company_id?: string | null
-          created_at?: string
-          created_by?: string | null
+          created_at?: string | null
           description?: string | null
           due_date?: string | null
+          email?: string | null
           id?: string
+          name: string
+          phone?: string | null
           priority?: string | null
+          source?: string | null
           status?: string | null
           title: string
-          updated_at?: string
+          updated_at?: string | null
           value?: number | null
         }
         Update: {
           assigned_to?: string | null
           company_id?: string | null
-          created_at?: string
-          created_by?: string | null
+          created_at?: string | null
           description?: string | null
           due_date?: string | null
+          email?: string | null
           id?: string
+          name?: string
+          phone?: string | null
           priority?: string | null
+          source?: string | null
           status?: string | null
           title?: string
-          updated_at?: string
+          updated_at?: string | null
           value?: number | null
         }
         Relationships: [
@@ -91,33 +162,107 @@ export type Database = {
       }
       profiles: {
         Row: {
-          avatar_url: string | null
+          avatar: string | null
           company_id: string | null
-          created_at: string
+          created_at: string | null
+          department: string | null
+          email: string | null
           id: string
           name: string | null
-          role: string
-          updated_at: string
+          phone: string | null
+          role: string | null
+          status: string | null
+          tasks_assigned: number | null
+          tasks_completed: number | null
+          updated_at: string | null
         }
         Insert: {
-          avatar_url?: string | null
+          avatar?: string | null
           company_id?: string | null
-          created_at?: string
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
           id: string
           name?: string | null
-          role?: string
-          updated_at?: string
+          phone?: string | null
+          role?: string | null
+          status?: string | null
+          tasks_assigned?: number | null
+          tasks_completed?: number | null
+          updated_at?: string | null
         }
         Update: {
-          avatar_url?: string | null
+          avatar?: string | null
           company_id?: string | null
-          created_at?: string
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
           id?: string
           name?: string | null
-          role?: string
-          updated_at?: string
+          phone?: string | null
+          role?: string | null
+          status?: string | null
+          tasks_assigned?: number | null
+          tasks_completed?: number | null
+          updated_at?: string | null
         }
         Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          client: string | null
+          company_id: string | null
+          completion: number | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          priority: string | null
+          start_date: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          client?: string | null
+          company_id?: string | null
+          completion?: number | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          priority?: string | null
+          start_date?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          client?: string | null
+          company_id?: string | null
+          completion?: number | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          priority?: string | null
+          start_date?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

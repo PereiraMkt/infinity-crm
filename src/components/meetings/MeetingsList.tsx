@@ -1,6 +1,5 @@
-
-import { useState } from "react";
-import { formatISO } from "date-fns";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import MeetingItem from "./MeetingItem";
@@ -63,7 +62,36 @@ const getMeetings = () => {
 };
 
 const MeetingsList = () => {
-  const [meetings] = useState(getMeetings());
+  const [meetings, setMeetings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchMeetings() {
+      setLoading(true);
+      // Exemplo: buscar tasks do tipo "meeting"
+      const { data } = await supabase.from("tasks").select("*").match({ status: "meeting" });
+      setMeetings(data || []);
+      setLoading(false);
+    }
+    fetchMeetings();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 p-6">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <span>Carregando reuniões...</span>
+      </div>
+    );
+  }
+
+  if (!meetings.length) {
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        Ainda não há dados suficientes. Adicione para ver os resultados.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -74,13 +102,9 @@ const MeetingsList = () => {
           Nova Reunião
         </Button>
       </div>
-      
       <div className="space-y-3">
         {meetings.map((meeting) => (
-          <MeetingItem 
-            key={meeting.id} 
-            {...meeting} 
-          />
+          <MeetingItem key={meeting.id} {...meeting} />
         ))}
       </div>
     </div>

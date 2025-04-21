@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, Building2, User } from 'lucide-react';
@@ -14,10 +13,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
 
+const passwordRules = "Ao menos 8 caracteres, letras maiúsculas, minúsculas, número e caractere especial";
+
 const registerSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  password: z.string()
+    .min(8, "A senha deve conter pelo menos 8 caracteres")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/, passwordRules),
   confirmPassword: z.string().min(6, 'Confirmação de senha obrigatória'),
   terms: z.boolean().refine(val => val === true, {
     message: 'Você deve aceitar os termos de serviço',
@@ -59,17 +62,14 @@ const Register = () => {
     }
   };
 
-  // Se o usuário já está autenticado, redirecionar para o dashboard
   if (user && !loading) {
     return <Navigate to="/app" replace />;
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-black via-gray-900 to-black text-white overflow-hidden">
-      {/* Background grid pattern */}
       <div className="fixed inset-0 z-0 bg-[url('/grid-pattern.svg')] opacity-5"></div>
       
-      {/* Global light effects */}
       <div className="fixed inset-0 z-0">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>

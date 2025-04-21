@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { toast } from "sonner";
 import { ModuleSyncState } from './types/moduleTypes';
@@ -11,6 +10,8 @@ import {
   assignClientToTaskAction,
   syncAllModulesAction
 } from './moduleActions';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 // Create the store
 export const useModuleSync = create<ModuleSyncState>((set, get) => ({
@@ -33,6 +34,21 @@ export const useModuleSync = create<ModuleSyncState>((set, get) => ({
   updateTask: (taskId, updates) => updateTaskAction(set, taskId, updates),
   assignClientToTask: (taskId, clientId) => assignClientToTaskAction(set, taskId, clientId),
   syncAllModules: () => syncAllModulesAction(set),
+  fetchLeads: async () => {
+    const { data, error } = await supabase.from("leads").select("*");
+    if (error) return [];
+    return data;
+  },
+  fetchClients: async () => {
+    const { data, error } = await supabase.from("clients").select("*");
+    if (error) return [];
+    return data;
+  },
+  fetchTasks: async () => {
+    const { data, error } = await supabase.from("tasks").select("*");
+    if (error) return [];
+    return data;
+  },
 }));
 
 // Helper function to update dashboard data

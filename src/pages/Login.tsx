@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, LogIn } from 'lucide-react';
@@ -22,6 +21,16 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const { signIn, user, loading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Loader visual durante o login
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-black text-white">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+        <span className="ml-6 text-lg">Entrando no Infinity CRM...</span>
+      </div>
+    );
+  }
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
