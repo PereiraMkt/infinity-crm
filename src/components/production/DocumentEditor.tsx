@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,7 +10,7 @@ import {
   ListOrdered, Image, FileText, Save, Download, Share, Plus, 
   Heading1, Heading2, Heading3, Underline, Link, Code, 
   FileSpreadsheet, FilePlus, FolderPlus, Folder, Table, Trash,
-  PaintBucket, Type, PaintBrush, Copy, Scissors as Cut, Play as Paste, Undo, Redo
+  Paintbrush, Type, Clipboard, Scissors, Play, Undo, Redo, Copy
 } from "lucide-react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
