@@ -111,8 +111,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Iniciando tentativa de login...");
       const result = await loginUser(email, password);
       
-      if (result.profile) setProfile(result.profile);
-      if (result.company) setCompany(result.company);
+      // Login bem-sucedido, buscar perfil e empresa
+      try {
+        const userData = await hydrateUser();
+        if (userData.profile) setProfile(userData.profile);
+        if (userData.company) setCompany(userData.company);
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário após login:", error);
+      }
       
       toast.success('Login realizado com sucesso!');
       await new Promise((resolve) => setTimeout(resolve, 900)); // Breve delay visual
