@@ -43,7 +43,7 @@ const CustomNode = memo(({ id, data, selected, style }: CustomNodeProps) => {
     borderRadius: '4px',
     color: '#000000',
     fontSize: '14px',
-    position: 'relative',
+    // Remove the problematic position property
     ...style
   };
 

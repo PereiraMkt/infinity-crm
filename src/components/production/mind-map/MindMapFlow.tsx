@@ -305,6 +305,10 @@ function MindMapFlow() {
     
     const newNode = createTemplateNode(template, nodeHandlers);
     // Apply current default styles to template node
+    if (!newNode.style) {
+      newNode.style = {};
+    }
+    
     newNode.style = {
       ...newNode.style,
       backgroundColor: defaultNodeColor,
