@@ -16,17 +16,19 @@ const LoadingScreen = () => {
         <div className="h-full bg-primary animate-progress-bar"></div>
       </div>
       
-      <style jsx>{`
-        @keyframes progress {
-          0% { width: 5%; }
-          50% { width: 70%; }
-          100% { width: 100%; }
-        }
-        .animate-progress-bar {
-          animation: progress 1.5s ease-in-out forwards;
-          width: 0%;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes progress {
+            0% { width: 5%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+          }
+          .animate-progress-bar {
+            animation: progress 1.5s ease-in-out forwards;
+            width: 0%;
+          }
+        `
+      }} />
     </div>
   );
 };
