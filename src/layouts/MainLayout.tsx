@@ -73,7 +73,7 @@ const MainLayout = () => {
           <TopNav 
             onMenuButtonClick={toggleSidebar}
             isSidebarOpen={sidebarOpen}
-            toggleSidebar={sidebarToggleButton}
+            toggleSidebar={sidebarToggleButton} // Pass the sidebar toggle button
           />
 
           <main className="flex-1 overflow-auto bg-background p-4 md:p-6">

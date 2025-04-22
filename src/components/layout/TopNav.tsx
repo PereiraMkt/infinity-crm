@@ -1,4 +1,3 @@
-
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +9,7 @@ import { ReactNode } from "react";
 interface TopNavProps {
   onMenuButtonClick: () => void;
   isSidebarOpen?: boolean;
-  toggleSidebar: ReactNode;
+  toggleSidebar: ReactNode; // Change this to ReactNode to match the usage
 }
 
 const moduleNames: Record<string, string> = {
