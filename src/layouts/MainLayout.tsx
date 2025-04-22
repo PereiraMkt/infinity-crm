@@ -5,7 +5,6 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Sidebar from "@/components/navigation/Sidebar";
 import { TopNav } from "@/components/layout/TopNav";
-import { MobileNav } from "@/components/layout/MobileNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import UnifiedChatButton from "@/components/chat/UnifiedChatButton";
@@ -24,7 +23,6 @@ const MainLayout = () => {
     function handleResize() {
       const mobile = window.innerWidth < 768;
       setIsMobileView(mobile);
-      
       if (mobile && sidebarOpen) {
         setSidebarOpen(false);
       }
@@ -39,43 +37,6 @@ const MainLayout = () => {
       setSidebarOpen(false);
     }
   }, [location.pathname, isMobileView]);
-  
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (isMobileView && sidebarOpen) {
-        const sidebar = document.getElementById('main-sidebar');
-        const toggleButton = document.getElementById('sidebar-toggle');
-        
-        if (sidebar && 
-            !sidebar.contains(e.target as Node) && 
-            toggleButton && 
-            !toggleButton.contains(e.target as Node)) {
-          setSidebarOpen(false);
-        }
-      }
-    };
-    
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [isMobileView, sidebarOpen]);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const sidebarToggleButton = (
-    <Button 
-      id="sidebar-toggle" 
-      variant="ghost" 
-      size="icon" 
-      className="md:hidden" 
-      onClick={toggleSidebar}
-    >
-      <ChevronLeft className={`h-5 w-5 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
-    </Button>
-  );
 
   if (loading) {
     return <LoadingScreen />;
@@ -92,11 +53,7 @@ const MainLayout = () => {
         </div>
 
         <div className="flex flex-col flex-1 w-full overflow-hidden">
-          <TopNav 
-            onMenuButtonClick={toggleSidebar} 
-            isSidebarOpen={sidebarOpen}
-            toggleSidebar={sidebarToggleButton}
-          />
+          <TopNav />
 
           <main className="flex-1 overflow-auto bg-background p-4 md:p-6">
             <ErrorBoundary
@@ -136,48 +93,25 @@ const MainLayout = () => {
           </main>
         </div>
 
-        {isMobileView && (
-          <MobileNav open={sidebarOpen} setOpen={setSidebarOpen} />
-        )}
-        
-        <UnifiedChatButton />
-
-        {isMobileView && (
-          <div className={cn(
+        {/* Mobile toggle button */}
+        <div 
+          className={cn(
             "fixed z-40 transition-all duration-300",
             sidebarOpen ? "left-[16.5rem]" : "left-4",
-            "top-[calc(100vh-7rem)]"
-          )}>
-            <Button 
-              variant="default" 
-              size="icon" 
-              className="rounded-full h-9 w-9 shadow-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(130,80,223,0.4)]"
-              onClick={() => {
-                console.log('Install app clicked');
-              }}
-              aria-label="Instalar Aplicativo"
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="16" 
-                height="16" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
-                <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
-                <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                <line x1="12" y1="22.08" x2="12" y2="12"></line>
-              </svg>
-            </Button>
-          </div>
-        )}
+            "bottom-24"
+          )}
+        >
+          <Button 
+            variant="default" 
+            size="icon" 
+            className="rounded-full h-9 w-9 shadow-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(130,80,223,0.4)]"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
+          </Button>
+        </div>
+        
+        <UnifiedChatButton />
       </div>
     </SidebarProvider>
   );
