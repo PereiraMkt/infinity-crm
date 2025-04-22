@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { File, Folder, FolderOpen, MoreHorizontal, Pencil, Download, Trash, ChevronRight, ChevronDown } from 'lucide-react';
 import { TreeItem } from '@/components/ui/tree';
@@ -72,7 +73,7 @@ const DocumentTreeItem: React.FC<DocumentTreeItemProps> = ({
 
   return (
     <TreeItem
-      key={item.id}
+      defaultOpen={isFolder ? item.expanded : undefined}
       icon={
         <div className="flex items-center">
           {isFolder && (
@@ -100,7 +101,6 @@ const DocumentTreeItem: React.FC<DocumentTreeItemProps> = ({
       label={item.name}
       onClick={isFolder ? handleFolderClick : () => onSelect(item)}
       className={cn(isSelected && "bg-primary/10")}
-      defaultOpen={isExpanded}
       actions={
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

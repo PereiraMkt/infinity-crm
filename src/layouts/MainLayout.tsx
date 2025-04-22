@@ -8,10 +8,8 @@ import { TopNav } from "@/components/layout/TopNav";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import UnifiedChatButton from "@/components/unified/UnifiedChatButton";
+import UnifiedChatButton from "@/components/chat/UnifiedChatButton";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import PageTransition from "@/components/ui/page-transition";
-import LoadingScreen from "@/components/ui/loading-screen";
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -21,59 +19,87 @@ const MainLayout = () => {
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    const handleResize = () => {
+    function handleResize() {
       const mobile = window.innerWidth < 768;
       setIsMobileView(mobile);
+      
+      // Auto-close sidebar on small screens when resizing
       if (mobile && sidebarOpen) {
         setSidebarOpen(false);
       }
-    };
+    }
     
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [sidebarOpen]);
 
+  // Close sidebar when navigating on mobile
   useEffect(() => {
     if (isMobileView) {
       setSidebarOpen(false);
     }
   }, [location.pathname, isMobileView]);
+  
+  // Close sidebar if user clicks outside of it
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      // Only apply this on mobile
+      if (isMobileView && sidebarOpen) {
+        const sidebar = document.getElementById('main-sidebar');
+        const toggleButton = document.getElementById('sidebar-toggle');
+        
+        if (sidebar && 
+            !sidebar.contains(e.target as Node) && 
+            toggleButton && 
+            !toggleButton.contains(e.target as Node)) {
+          setSidebarOpen(false);
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isMobileView, sidebarOpen]);
 
   if (loading) {
-    return <LoadingScreen />;
+    return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   }
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
+  // Define toggleSidebar function
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  
   // Create the sidebar toggle button as a React element
   const sidebarToggleButton = (
     <Button 
       id="sidebar-toggle" 
       variant="ghost" 
       size="icon" 
-      className={`transition-all duration-300 ${isMobileView ? 'md:hidden' : ''}`}
+      className="md:hidden" 
       onClick={toggleSidebar}
     >
-      <ChevronLeft className={`h-5 w-5 transition-transform duration-300 ${!sidebarOpen ? 'rotate-180' : ''}`} />
-      <span className="sr-only">Toggle Sidebar</span>
+      <ChevronLeft className={`h-5 w-5 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
     </Button>
   );
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex dark:bg-gray-900 bg-gray-50 transition-colors duration-300 w-full">
-        <Sidebar 
-          open={sidebarOpen} 
-          setOpen={setSidebarOpen}
-        />
+        {/* Sidebar - Responsive */}
+        <div id="main-sidebar">
+          <Sidebar 
+            open={sidebarOpen} 
+            setOpen={setSidebarOpen} 
+          />
+        </div>
 
+        {/* Main content area */}
         <div className="flex flex-col flex-1 w-full overflow-hidden">
           <TopNav 
-            onMenuButtonClick={toggleSidebar}
+            onMenuButtonClick={toggleSidebar} 
             isSidebarOpen={sidebarOpen}
-            toggleSidebar={sidebarToggleButton} // Pass the sidebar toggle button
+            toggleSidebar={sidebarToggleButton}
           />
 
           <main className="flex-1 overflow-auto bg-background p-4 md:p-6">
@@ -107,18 +133,19 @@ const MainLayout = () => {
                 </div>
               }
             >
-              <PageTransition />
-              <Suspense fallback={<LoadingScreen />}>
+              <Suspense fallback={<div className="p-4">Carregando conteúdo...</div>}>
                 <Outlet />
               </Suspense>
             </ErrorBoundary>
           </main>
         </div>
 
+        {/* Mobile Navigation - Overlay */}
         {isMobileView && (
           <MobileNav open={sidebarOpen} setOpen={setSidebarOpen} />
         )}
         
+        {/* Unified Chat Button */}
         <UnifiedChatButton />
       </div>
     </SidebarProvider>
