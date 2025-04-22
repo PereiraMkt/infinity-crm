@@ -1,7 +1,8 @@
 
 import React, { useState } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import DocumentExplorer, { DocumentItem } from "./document-explorer/DocumentExplorer";
+import DocumentExplorer from "./document-explorer/DocumentExplorer";
+import { DocumentItem } from "./document-explorer/types";
 import DocumentContent from "./document-editor/DocumentContent";
 import { useToast } from "@/hooks/use-toast";
 
