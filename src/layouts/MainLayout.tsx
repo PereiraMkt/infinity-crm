@@ -8,7 +8,7 @@ import { TopNav } from "@/components/layout/TopNav";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import UnifiedChatButton from "@/components/chat/UnifiedChatButton";
+import UnifiedChatButton from "@/components/unified/UnifiedChatButton";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import LoadingScreen from "@/components/ui/loading-screen";

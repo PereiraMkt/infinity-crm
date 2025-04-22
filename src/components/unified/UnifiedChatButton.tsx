@@ -6,6 +6,12 @@ import FloatingChat from "@/components/chat/FloatingChat";
 import VideoCall from "@/components/chat/VideoCall";
 import { useFloatingAction } from "@/hooks/use-floating-action";
 import { cn } from "@/lib/utils";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 const UnifiedChatButton = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -112,20 +118,55 @@ const UnifiedChatButton = () => {
               <ChevronDown className="h-4 w-4" />
             </Button>
           </div>
-          <div className="space-y-3">
-            {/* Contact list */}
-            {["João Silva", "Maria Oliveira", "Carlos Santos", "Ana Lima", "Roberto Ferreira"].map((name, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-md cursor-pointer">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
-                  {name.split(' ').map(n => n[0]).join('')}
+          <Tabs defaultValue="all">
+            <TabsList className="grid w-full grid-cols-3 mb-2">
+              <TabsTrigger value="all">Todos</TabsTrigger>
+              <TabsTrigger value="online">Online</TabsTrigger>
+              <TabsTrigger value="starred">Favoritos</TabsTrigger>
+            </TabsList>
+            <TabsContent value="all" className="space-y-3">
+              {/* Contact list */}
+              {["João Silva", "Maria Oliveira", "Carlos Santos", "Ana Lima", "Roberto Ferreira"].map((name, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-md cursor-pointer">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
+                    {name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <div className="font-medium">{name}</div>
+                    <div className="text-sm text-muted-foreground">Online agora</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-medium">{name}</div>
-                  <div className="text-sm text-muted-foreground">Online agora</div>
+              ))}
+            </TabsContent>
+            <TabsContent value="online" className="space-y-3">
+              {/* Online contacts */}
+              {["João Silva", "Ana Lima"].map((name, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-md cursor-pointer">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
+                    {name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <div className="font-medium">{name}</div>
+                    <div className="text-sm text-muted-foreground">Online agora</div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </TabsContent>
+            <TabsContent value="starred" className="space-y-3">
+              {/* Starred contacts */}
+              {["Maria Oliveira"].map((name, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-md cursor-pointer">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
+                    {name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <div className="font-medium">{name}</div>
+                    <div className="text-sm text-muted-foreground">Online agora</div>
+                  </div>
+                </div>
+              ))}
+            </TabsContent>
+          </Tabs>
         </div>
       )}
     </div>
