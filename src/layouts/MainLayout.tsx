@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, Suspense } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
@@ -10,6 +11,7 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import UnifiedChatButton from "@/components/chat/UnifiedChatButton";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import LoadingScreen from "@/components/ui/loading-screen";
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -58,6 +60,10 @@ const MainLayout = () => {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, [isMobileView, sidebarOpen]);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
   const sidebarToggleButton = (
     <Button 
