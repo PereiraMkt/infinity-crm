@@ -20,7 +20,8 @@ export const useDocumentOperations = (onSelectFile: (file: DocumentItem | null) 
       id: `${type}-${Date.now()}`,
       name,
       type,
-      content: type === "file" ? "# New Document\n\nStart writing here..." : undefined,
+      content: type === "file" ? "" : undefined,
+      expanded: type === "folder" ? true : undefined,
       children: type === "folder" ? [] : undefined,
     };
     
@@ -92,6 +93,16 @@ export const useDocumentOperations = (onSelectFile: (file: DocumentItem | null) 
     }
   };
 
+  const toggleFolderExpanded = (folderId: string) => {
+    const updatedDocs = toggleExpanded(documents, folderId);
+    setDocuments(updatedDocs);
+  };
+
+  const updateFileContent = (fileId: string, content: string) => {
+    const updatedDocs = updateContent(documents, fileId, content);
+    setDocuments(updatedDocs);
+  };
+
   return {
     newItemDialogOpen,
     setNewItemDialogOpen,
@@ -100,6 +111,8 @@ export const useDocumentOperations = (onSelectFile: (file: DocumentItem | null) 
     handleDeleteItem,
     handleRename,
     handleExportDocument,
+    toggleFolderExpanded,
+    updateFileContent
   };
 };
 
@@ -148,6 +161,46 @@ const renameItem = (items: DocumentItem[], itemId: string, newName: string): Doc
       return {
         ...item,
         children: renameItem(item.children, itemId, newName),
+      };
+    }
+    
+    return item;
+  });
+};
+
+const toggleExpanded = (items: DocumentItem[], itemId: string): DocumentItem[] => {
+  return items.map(item => {
+    if (item.id === itemId && item.type === "folder") {
+      return {
+        ...item,
+        expanded: !(item.expanded),
+      };
+    }
+    
+    if (item.children) {
+      return {
+        ...item,
+        children: toggleExpanded(item.children, itemId),
+      };
+    }
+    
+    return item;
+  });
+};
+
+const updateContent = (items: DocumentItem[], itemId: string, content: string): DocumentItem[] => {
+  return items.map(item => {
+    if (item.id === itemId) {
+      return {
+        ...item,
+        content,
+      };
+    }
+    
+    if (item.children) {
+      return {
+        ...item,
+        children: updateContent(item.children, itemId),
       };
     }
     

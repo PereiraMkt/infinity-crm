@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Tree } from "@/components/ui/tree";
 import { DocumentProvider } from "./contexts/DocumentContext";
 import { useDocumentContext } from "./contexts/DocumentContext";
@@ -13,6 +14,7 @@ const initialDocuments: DocumentItem[] = [
     id: "folder-1",
     name: "Projetos",
     type: "folder",
+    expanded: true,
     children: [
       {
         id: "file-1",
@@ -32,6 +34,7 @@ const initialDocuments: DocumentItem[] = [
     id: "folder-2",
     name: "Documentos",
     type: "folder",
+    expanded: false,
     children: [
       {
         id: "file-3",
@@ -45,6 +48,7 @@ const initialDocuments: DocumentItem[] = [
     id: "folder-3",
     name: "Processos",
     type: "folder",
+    expanded: false,
     children: [
       {
         id: "file-4",
@@ -62,7 +66,7 @@ interface DocumentExplorerProps {
 }
 
 const DocumentExplorerContent: React.FC<DocumentExplorerProps> = ({ onSelectFile, selectedFile }) => {
-  const { documents, searchQuery } = useDocumentContext();
+  const { documents, setDocuments, searchQuery, selectedFolder, setSelectedFolder } = useDocumentContext();
   const {
     newItemDialogOpen,
     setNewItemDialogOpen,
@@ -71,6 +75,7 @@ const DocumentExplorerContent: React.FC<DocumentExplorerProps> = ({ onSelectFile
     handleDeleteItem,
     handleRename,
     handleExportDocument,
+    toggleFolderExpanded
   } = useDocumentOperations(onSelectFile);
 
   const renderItems = (items: DocumentItem[]) => {
@@ -93,6 +98,7 @@ const DocumentExplorerContent: React.FC<DocumentExplorerProps> = ({ onSelectFile
         onDelete={handleDeleteItem}
         onRename={handleRename}
         onExport={handleExportDocument}
+        onToggleExpanded={toggleFolderExpanded}
         selectedFile={selectedFile}
       />
     ));

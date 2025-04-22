@@ -59,7 +59,7 @@ const NewItemDialog: React.FC<NewItemDialogProps> = ({
             <RadioGroup value={type} onValueChange={(val) => setType(val as "file" | "folder")}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="file" id="file" />
-                <Label htmlFor="file">Documento</Label>
+                <Label htmlFor="file">Arquivo</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="folder" id="folder" />

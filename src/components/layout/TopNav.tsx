@@ -1,4 +1,5 @@
-import { Bell, Settings } from "lucide-react";
+
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
@@ -57,13 +58,6 @@ export function TopNav({
         <ThemeToggle />
         
         <UserMenu />
-        
-        <Link to="/app/settings">
-          <Button variant="ghost" size="icon">
-            <Settings className="h-5 w-5" />
-            <span className="sr-only">Settings</span>
-          </Button>
-        </Link>
       </div>
     </header>;
 }

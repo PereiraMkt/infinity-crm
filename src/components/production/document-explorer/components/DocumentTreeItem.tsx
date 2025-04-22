@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { File, Folder, MoreHorizontal, Pencil, Download, Trash } from 'lucide-react';
+import { File, Folder, FolderOpen, MoreHorizontal, Pencil, Download, Trash, ChevronRight, ChevronDown } from 'lucide-react';
 import { TreeItem } from '@/components/ui/tree';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ interface DocumentTreeItemProps {
   onDelete: (id: string) => void;
   onRename: (id: string, newName: string) => void;
   onExport: (item: DocumentItem) => void;
+  onToggleExpanded: (id: string) => void;
   selectedFile: DocumentItem | null;
 }
 
@@ -30,10 +31,13 @@ const DocumentTreeItem: React.FC<DocumentTreeItemProps> = ({
   onDelete,
   onRename,
   onExport,
+  onToggleExpanded,
   selectedFile,
 }) => {
   const { selectedFolder, setSelectedFolder, editingItem, setEditingItem } = useDocumentContext();
   const isSelected = selectedFile?.id === item.id || selectedFolder === item.id;
+  const isFolder = item.type === "folder";
+  const isExpanded = isFolder && item.expanded;
 
   const handleFolderClick = () => {
     setSelectedFolder(selectedFolder === item.id ? null : item.id);
@@ -46,7 +50,7 @@ const DocumentTreeItem: React.FC<DocumentTreeItemProps> = ({
   if (editingItem?.id === item.id) {
     return (
       <TreeItem
-        icon={item.type === "folder" ? <Folder className="h-4 w-4" /> : <File className="h-4 w-4" />}
+        icon={isFolder ? (isExpanded ? <FolderOpen className="h-4 w-4" /> : <Folder className="h-4 w-4" />) : <File className="h-4 w-4" />}
         label={
           <Input
             size={1}
@@ -69,13 +73,33 @@ const DocumentTreeItem: React.FC<DocumentTreeItemProps> = ({
 
   return (
     <TreeItem
+      expanded={isFolder ? item.expanded : undefined}
       icon={
-        <div className={cn("h-4 w-4", isSelected && "text-primary")}>
-          {item.type === "folder" ? <Folder /> : <File />}
+        <div className="flex items-center">
+          {isFolder && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-4 w-4 p-0 mr-1" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExpanded(item.id);
+              }}
+            >
+              {isExpanded ? (
+                <ChevronDown className="h-3 w-3" />
+              ) : (
+                <ChevronRight className="h-3 w-3" />
+              )}
+            </Button>
+          )}
+          <span className={cn("h-4 w-4", isSelected && "text-primary")}>
+            {isFolder ? (isExpanded ? <FolderOpen /> : <Folder />) : <File />}
+          </span>
         </div>
       }
       label={item.name}
-      onClick={item.type === "folder" ? handleFolderClick : () => onSelect(item)}
+      onClick={isFolder ? handleFolderClick : () => onSelect(item)}
       className={cn(isSelected && "bg-primary/10")}
       actions={
         <DropdownMenu>
@@ -100,7 +124,20 @@ const DocumentTreeItem: React.FC<DocumentTreeItemProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
       }
-    />
+    >
+      {isFolder && item.children && item.expanded && item.children.map(child => (
+        <DocumentTreeItem
+          key={child.id}
+          item={child}
+          onSelect={onSelect}
+          onDelete={onDelete}
+          onRename={onRename}
+          onExport={onExport}
+          onToggleExpanded={onToggleExpanded}
+          selectedFile={selectedFile}
+        />
+      ))}
+    </TreeItem>
   );
 };
 

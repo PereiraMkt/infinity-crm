@@ -8,7 +8,7 @@ import { TopNav } from "@/components/layout/TopNav";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import UnifiedChatButton from "@/components/unified/UnifiedChatButton";
+import UnifiedChatButton from "@/components/chat/UnifiedChatButton";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 const MainLayout = () => {
@@ -86,7 +86,17 @@ const MainLayout = () => {
           <TopNav 
             onMenuButtonClick={toggleSidebar} 
             isSidebarOpen={sidebarOpen}
-            toggleSidebar={toggleSidebar}
+            toggleSidebar={
+              <Button 
+                id="sidebar-toggle" 
+                variant="ghost" 
+                size="icon" 
+                className="md:hidden" 
+                onClick={toggleSidebar}
+              >
+                <ChevronLeft className={`h-5 w-5 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            }
           />
 
           <main className="flex-1 overflow-auto bg-background p-4 md:p-6">
