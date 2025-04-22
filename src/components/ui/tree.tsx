@@ -20,7 +20,7 @@ Tree.displayName = "Tree";
 
 interface TreeItemProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: React.ReactNode;
-  label: string;
+  label: React.ReactNode; // Changed from 'string' to 'React.ReactNode' to accept elements
   defaultOpen?: boolean;
   actions?: React.ReactNode;
   onClick?: () => void;
