@@ -44,6 +44,23 @@ const MainLayout = () => {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   }
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  // Create the sidebar toggle button as a React element
+  const sidebarToggleButton = (
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      className={isMobileView ? 'md:hidden' : ''}
+      onClick={toggleSidebar}
+    >
+      <ChevronLeft className={`h-5 w-5 transition-transform duration-300 ${!sidebarOpen ? 'rotate-180' : ''}`} />
+      <span className="sr-only">Toggle Sidebar</span>
+    </Button>
+  );
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex dark:bg-gray-900 bg-gray-50 transition-colors duration-300 w-full">
@@ -55,7 +72,11 @@ const MainLayout = () => {
 
         {/* Main content area */}
         <div className="flex flex-col flex-1 w-full overflow-hidden">
-          <TopNav onMenuButtonClick={() => setSidebarOpen(!sidebarOpen)} />
+          <TopNav 
+            onMenuButtonClick={toggleSidebar}
+            isSidebarOpen={sidebarOpen}
+            toggleSidebar={sidebarToggleButton}
+          />
 
           <main className="flex-1 overflow-auto bg-background p-4 md:p-6">
             <ErrorBoundary
