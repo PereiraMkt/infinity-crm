@@ -1,48 +1,21 @@
 
 import React, { useState } from "react";
-import { ChevronDown, MessageCircle, Users, MessageSquare, X } from "lucide-react";
+import { MessageCircle, Users, MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-interface BaseContact {
-  id: string;
-  name: string;
-  avatar: string;
-  lastMessage: string;
-  unread: number;
-}
-
-interface PersonContact extends BaseContact {
-  status: 'online' | 'away' | 'offline';
-}
-
-interface GroupContact extends BaseContact {
-  members?: number;
-}
+import ChatList from "./ChatList";
+import ChatHeader from "./ChatHeader";
+import ChatMessage from "./ChatMessage";
+import type { PersonContact, GroupContact, Message } from "./types";
 
 const UnifiedChatButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("interno");
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
-    if (selectedChat) {
-      setSelectedChat(null);
-    }
-  };
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim()) {
-      setMessage("");
-    }
-  };
 
   // Mock data
   const internalContacts: PersonContact[] = [
@@ -61,11 +34,25 @@ const UnifiedChatButton = () => {
     { id: "e2", name: "Fornecedor XYZ", status: "offline", avatar: "", lastMessage: "Orçamento enviado", unread: 0 }
   ];
 
-  const mockMessages = [
+  const mockMessages: Message[] = [
     { id: "m1", sender: "other", text: "Olá, como está o projeto?", time: "10:30" },
     { id: "m2", sender: "me", text: "Está andando bem! Já concluímos a fase inicial.", time: "10:32" },
     { id: "m3", sender: "other", text: "Ótimo! Quando teremos a primeira entrega?", time: "10:35" }
   ];
+
+  const toggleChat = () => {
+    setIsOpen(!isOpen);
+    if (selectedChat) {
+      setSelectedChat(null);
+    }
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim()) {
+      setMessage("");
+    }
+  };
 
   const getContacts = () => {
     switch (activeTab) {
@@ -80,108 +67,7 @@ const UnifiedChatButton = () => {
     }
   };
 
-  const renderChatList = () => {
-    const contacts = getContacts();
-    
-    return contacts.map(contact => (
-      <div
-        key={contact.id}
-        className="flex items-center gap-2 p-2 hover:bg-muted cursor-pointer rounded-md"
-        onClick={() => setSelectedChat(contact.id)}
-      >
-        <Avatar className="h-10 w-10">
-          {contact.avatar ? (
-            <AvatarImage src={contact.avatar} />
-          ) : (
-            <AvatarFallback>
-              {contact.name.split(' ').map(n => n[0]).join('')}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between">
-            <span className="font-medium text-sm">{contact.name}</span>
-            {contact.unread > 0 && (
-              <span className="bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center text-xs">
-                {contact.unread}
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground truncate">{contact.lastMessage}</p>
-        </div>
-      </div>
-    ));
-  };
-
-  const renderChatMessages = () => {
-    if (!selectedChat) return null;
-
-    const contact = [...internalContacts, ...groupContacts, ...externalContacts].find(c => c.id === selectedChat);
-
-    return (
-      <div className="flex flex-col h-full">
-        <div className="border-b p-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              {contact?.avatar ? (
-                <AvatarImage src={contact.avatar} />
-              ) : (
-                <AvatarFallback>
-                  {contact?.name.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div>
-              <div className="font-medium text-sm">{contact?.name}</div>
-              {'status' in contact && (
-                <div className="text-xs flex items-center gap-1">
-                  <span className={`h-1.5 w-1.5 rounded-full ${
-                    contact.status === 'online' ? 'bg-green-500' : 
-                    contact.status === 'away' ? 'bg-yellow-500' : 
-                    'bg-gray-500'
-                  }`} />
-                  {contact.status === 'online' ? 'Online' : 
-                   contact.status === 'away' ? 'Ausente' : 
-                   'Offline'}
-                </div>
-              )}
-            </div>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => setSelectedChat(null)}>
-            <ChevronDown size={16} />
-          </Button>
-        </div>
-
-        <ScrollArea className="flex-1 p-3">
-          <div className="space-y-3">
-            {mockMessages.map(msg => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`max-w-[85%] p-2 rounded-lg ${
-                  msg.sender === 'me' ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                }`}>
-                  <p className="text-sm">{msg.text}</p>
-                  <p className="text-xs opacity-70 text-right mt-1">{msg.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-
-        <form onSubmit={handleSendMessage} className="border-t p-2 flex gap-2">
-          <Input
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            placeholder="Digite sua mensagem..."
-            className="flex-1"
-          />
-          <Button type="submit" size="sm">Enviar</Button>
-        </form>
-      </div>
-    );
-  };
+  const selectedContact = [...internalContacts, ...groupContacts, ...externalContacts].find(c => c.id === selectedChat);
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-2">
@@ -207,11 +93,33 @@ const UnifiedChatButton = () => {
           </div>
 
           <div className="flex-1 flex flex-col">
-            {selectedChat ? (
-              renderChatMessages()
+            {selectedChat && selectedContact ? (
+              <>
+                <ChatHeader contact={selectedContact} onBack={() => setSelectedChat(null)} />
+                <ScrollArea className="flex-1 p-3">
+                  <div className="space-y-3">
+                    {mockMessages.map(msg => (
+                      <ChatMessage key={msg.id} message={msg} />
+                    ))}
+                  </div>
+                </ScrollArea>
+                <form onSubmit={handleSendMessage} className="border-t p-2 flex gap-2">
+                  <Input
+                    value={message}
+                    onChange={e => setMessage(e.target.value)}
+                    placeholder="Digite sua mensagem..."
+                    className="flex-1"
+                  />
+                  <Button type="submit" size="sm">Enviar</Button>
+                </form>
+              </>
             ) : (
               <ScrollArea className="flex-1 p-2">
-                {renderChatList()}
+                <ChatList
+                  contacts={getContacts()}
+                  onSelectChat={(contact) => setSelectedChat(contact.id)}
+                  selectedId={selectedChat}
+                />
               </ScrollArea>
             )}
           </div>
