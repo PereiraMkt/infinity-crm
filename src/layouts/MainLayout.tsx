@@ -69,6 +69,19 @@ const MainLayout = () => {
 
   // Define toggleSidebar function
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  
+  // Create the sidebar toggle button as a React element
+  const sidebarToggleButton = (
+    <Button 
+      id="sidebar-toggle" 
+      variant="ghost" 
+      size="icon" 
+      className="md:hidden" 
+      onClick={toggleSidebar}
+    >
+      <ChevronLeft className={`h-5 w-5 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
+    </Button>
+  );
 
   return (
     <SidebarProvider>
@@ -86,17 +99,7 @@ const MainLayout = () => {
           <TopNav 
             onMenuButtonClick={toggleSidebar} 
             isSidebarOpen={sidebarOpen}
-            toggleSidebar={
-              <Button 
-                id="sidebar-toggle" 
-                variant="ghost" 
-                size="icon" 
-                className="md:hidden" 
-                onClick={toggleSidebar}
-              >
-                <ChevronLeft className={`h-5 w-5 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
-              </Button>
-            }
+            toggleSidebar={sidebarToggleButton}
           />
 
           <main className="flex-1 overflow-auto bg-background p-4 md:p-6">

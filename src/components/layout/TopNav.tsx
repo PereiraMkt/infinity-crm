@@ -6,11 +6,14 @@ import { Link } from "react-router-dom";
 import { UserMenu } from "@/components/auth/UserMenu";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { useLocation } from "react-router-dom";
+import { ReactNode } from "react";
+
 interface TopNavProps {
   onMenuButtonClick: () => void;
   isSidebarOpen?: boolean;
-  toggleSidebar?: () => void;
+  toggleSidebar?: ReactNode;
 }
+
 const moduleNames: Record<string, string> = {
   "/app": "Dashboard",
   "/app/sales-funnel": "Funil de Vendas",
@@ -25,6 +28,7 @@ const moduleNames: Record<string, string> = {
   "/app/meetings": "Reuniões",
   "/app/settings": "Configurações"
 };
+
 export function TopNav({
   onMenuButtonClick,
   isSidebarOpen,
@@ -41,6 +45,7 @@ export function TopNav({
     const currentPath = Object.keys(moduleNames).filter(path => location.pathname.startsWith(path)).sort((a, b) => b.length - a.length)[0];
     return currentPath ? moduleNames[currentPath] : "";
   };
+
   return <header className="h-16 px-4 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between">
       <div className="flex items-center gap-4">
         {toggleSidebar}

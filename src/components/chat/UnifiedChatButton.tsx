@@ -8,6 +8,25 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+// Define types for our contacts
+interface BaseContact {
+  id: string;
+  name: string;
+  avatar: string;
+  lastMessage: string;
+  unread: number;
+}
+
+interface PersonContact extends BaseContact {
+  status: 'online' | 'away' | 'offline';
+}
+
+interface GroupContact extends BaseContact {
+  // Groups don't have a status property
+}
+
+type Contact = PersonContact | GroupContact;
+
 const UnifiedChatButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("interno");
@@ -31,18 +50,18 @@ const UnifiedChatButton = () => {
   };
   
   // Mock contacts
-  const internalContacts = [
+  const internalContacts: PersonContact[] = [
     { id: "1", name: "Ana Silva", status: "online", avatar: "", lastMessage: "Podemos revisar o documento?", unread: 2 },
     { id: "2", name: "João Santos", status: "away", avatar: "", lastMessage: "Projeto concluído!", unread: 0 },
     { id: "3", name: "Maria Oliveira", status: "offline", avatar: "", lastMessage: "Vou enviar os relatórios amanhã", unread: 0 },
   ];
   
-  const groupContacts = [
+  const groupContacts: GroupContact[] = [
     { id: "g1", name: "Equipe de Marketing", avatar: "", lastMessage: "Carlos: Campanha finalizada", unread: 3 },
     { id: "g2", name: "Projeto X", avatar: "", lastMessage: "Ana: Reunião às 14h", unread: 0 },
   ];
   
-  const externalContacts = [
+  const externalContacts: PersonContact[] = [
     { id: "e1", name: "Cliente ABC", status: "online", avatar: "", lastMessage: "Quando podemos agendar uma reunião?", unread: 1 },
     { id: "e2", name: "Fornecedor XYZ", status: "offline", avatar: "", lastMessage: "Orçamento enviado", unread: 0 },
   ];
@@ -128,11 +147,13 @@ const UnifiedChatButton = () => {
               {'status' in (contact || {}) && (
                 <div className="text-xs flex items-center gap-1">
                   <span className={`h-1.5 w-1.5 rounded-full ${
-                    contact?.status === 'online' ? 'bg-green-500' : 
-                    contact?.status === 'away' ? 'bg-yellow-500' : 'bg-gray-500'
+                    'status' in contact && contact.status === 'online' ? 'bg-green-500' : 
+                    'status' in contact && contact.status === 'away' ? 'bg-yellow-500' : 'bg-gray-500'
                   }`}></span>
-                  {contact?.status === 'online' ? 'Online' : 
-                   contact?.status === 'away' ? 'Ausente' : 'Offline'}
+                  {'status' in contact ? (
+                    contact.status === 'online' ? 'Online' : 
+                    contact.status === 'away' ? 'Ausente' : 'Offline'
+                  ) : 'Grupo'}
                 </div>
               )}
             </div>

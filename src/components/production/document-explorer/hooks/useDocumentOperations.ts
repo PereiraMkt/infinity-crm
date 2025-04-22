@@ -200,7 +200,7 @@ const updateContent = (items: DocumentItem[], itemId: string, content: string): 
     if (item.children) {
       return {
         ...item,
-        children: updateContent(item.children, itemId),
+        children: updateContent(item.children, itemId, content),
       };
     }
     

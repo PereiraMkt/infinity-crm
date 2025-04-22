@@ -73,7 +73,7 @@ const DocumentTreeItem: React.FC<DocumentTreeItemProps> = ({
 
   return (
     <TreeItem
-      expanded={isFolder ? item.expanded : undefined}
+      defaultOpen={isFolder ? item.expanded : undefined}
       icon={
         <div className="flex items-center">
           {isFolder && (
