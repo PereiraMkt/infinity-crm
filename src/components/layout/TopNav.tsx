@@ -1,6 +1,6 @@
 
+import ThemeToggle from "@/components/theme/ThemeToggle";
 import { UserMenu } from "@/components/auth/UserMenu";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export function TopNav() {
   return (

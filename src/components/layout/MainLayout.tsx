@@ -8,8 +8,10 @@ import { TopNav } from "@/components/layout/TopNav";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import UnifiedChatButton from "@/components/unified/UnifiedChatButton";
+import UnifiedChatButton from "@/components/chat/UnifiedChatButton";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import LoadingScreen from "@/components/ui/loading-screen";
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -41,21 +43,23 @@ const MainLayout = () => {
   }, [location.pathname, isMobileView]);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Carregando...</div>;
+    return <LoadingScreen />;
   }
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex dark:bg-gray-900 bg-gray-50 transition-colors duration-300 w-full">
         {/* Sidebar - Responsive */}
-        <Sidebar 
-          open={sidebarOpen} 
-          setOpen={setSidebarOpen} 
-        />
+        <div id="main-sidebar" className="h-screen overflow-y-auto">
+          <Sidebar 
+            open={sidebarOpen} 
+            setOpen={setSidebarOpen} 
+          />
+        </div>
 
         {/* Main content area */}
         <div className="flex flex-col flex-1 w-full overflow-hidden">
-          <TopNav onMenuButtonClick={() => setSidebarOpen(!sidebarOpen)} />
+          <TopNav />
 
           <main className="flex-1 overflow-auto bg-background p-4 md:p-6">
             <ErrorBoundary
@@ -88,19 +92,31 @@ const MainLayout = () => {
                 </div>
               }
             >
-              <Suspense fallback={<div className="p-4">Carregando conteúdo...</div>}>
+              <Suspense fallback={<LoadingScreen minimal />}>
                 <Outlet />
               </Suspense>
             </ErrorBoundary>
           </main>
         </div>
 
-        {/* Mobile Navigation - Overlay */}
-        {isMobileView && (
-          <MobileNav open={sidebarOpen} setOpen={setSidebarOpen} />
-        )}
+        {/* Mobile toggle button */}
+        <div 
+          className={cn(
+            "fixed z-40 transition-all duration-300",
+            sidebarOpen ? "left-[16.5rem]" : "left-4",
+            "bottom-24"
+          )}
+        >
+          <Button 
+            variant="default" 
+            size="icon" 
+            className="rounded-full h-9 w-9 shadow-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(130,80,223,0.4)]"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
+          </Button>
+        </div>
         
-        {/* Unified Chat Button */}
         <UnifiedChatButton />
       </div>
     </SidebarProvider>
