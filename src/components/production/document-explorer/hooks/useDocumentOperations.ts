@@ -1,19 +1,16 @@
 
-import { useState } from "react";
-import { useDocumentContext } from "../contexts/DocumentContext";
-import { DocumentItem } from "../types";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { DocumentItem } from '../types';
+import { useDocumentContext } from '../contexts/DocumentContext';
 
-export const useDocumentOperations = (
-  onSelectFile: (file: DocumentItem) => void,
-  onAddDocument?: (document: DocumentItem) => void
-) => {
-  const { toast } = useToast();
-  const { documents, setDocuments, selectedFolder, setSelectedFolder } = useDocumentContext();
+export const useDocumentOperations = (onSelectFile: (file: DocumentItem | null) => void) => {
   const [newItemDialogOpen, setNewItemDialogOpen] = useState(false);
   const [newItemParentId, setNewItemParentId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const { documents, setDocuments, selectedFolder, setSelectedFolder, setEditingItem } = useDocumentContext();
 
-  const handleAddItem = (parentId: string | null = null) => {
+  const handleAddItem = (parentId: string | null) => {
     setNewItemParentId(parentId);
     setNewItemDialogOpen(true);
   };
@@ -23,113 +20,76 @@ export const useDocumentOperations = (
       id: `${type}-${Date.now()}`,
       name,
       type,
+      content: type === "file" ? "# New Document\n\nStart writing here..." : undefined,
+      children: type === "folder" ? [] : undefined,
     };
-
-    if (type === "folder") {
-      newItem.children = [];
-    } else {
-      newItem.content = "";
-    }
-
-    if (newItemParentId) {
-      // Add to specific folder
-      const updateFolderRecursively = (items: DocumentItem[]): DocumentItem[] => {
-        return items.map((item) => {
-          if (item.id === newItemParentId) {
-            return {
-              ...item,
-              children: [...(item.children || []), newItem],
-            };
-          } else if (item.children) {
-            return {
-              ...item,
-              children: updateFolderRecursively(item.children),
-            };
-          }
-          return item;
-        });
-      };
-
-      setDocuments(updateFolderRecursively(documents));
-    } else {
-      // Add to root level
+    
+    const effectiveParentId = newItemParentId === null && selectedFolder ? selectedFolder : newItemParentId;
+    
+    if (effectiveParentId === null) {
       setDocuments([...documents, newItem]);
+    } else {
+      const updatedDocs = addItemToFolder(documents, effectiveParentId, newItem);
+      setDocuments(updatedDocs);
     }
-
-    toast({
-      title: type === "file" ? "Novo documento criado" : "Nova pasta criada",
-      description: `"${name}" foi criado com sucesso.`,
-    });
-
-    // If it's a file and we have the callback, select it
+    
     if (type === "file") {
-      if (onAddDocument) {
-        onAddDocument(newItem);
-      } else {
-        onSelectFile(newItem); 
-      }
+      onSelectFile(newItem);
     }
-
-    setNewItemDialogOpen(false);
+    
+    toast({
+      title: `${type === "file" ? "Documento" : "Pasta"} criado(a)`,
+      description: `${name} foi criado(a) com sucesso.`
+    });
   };
 
-  const handleDeleteItem = (id: string) => {
-    const deleteRecursively = (items: DocumentItem[]): DocumentItem[] => {
-      return items.filter((item) => {
-        if (item.id === id) return false;
-        if (item.children) {
-          item.children = deleteRecursively(item.children);
-        }
-        return true;
-      });
-    };
-
-    setDocuments(deleteRecursively(documents));
+  const handleDeleteItem = (itemId: string) => {
+    const updatedDocs = deleteItem(documents, itemId);
+    setDocuments(updatedDocs);
+    
+    if (selectedFolder === itemId) {
+      setSelectedFolder(null);
+    }
+    
+    onSelectFile(null);
+    
     toast({
       title: "Item excluído",
-      description: "O item foi excluído com sucesso.",
+      description: "O item foi excluído com sucesso."
     });
   };
 
-  const handleRename = (id: string, newName: string) => {
-    if (!newName.trim()) return;
+  const handleRename = (itemId: string, newName: string) => {
+    if (!newName.trim()) {
+      setEditingItem(null);
+      return;
+    }
+    
+    const updatedDocs = renameItem(documents, itemId, newName);
+    setDocuments(updatedDocs);
+    setEditingItem(null);
+    
+    toast({
+      title: "Item renomeado",
+      description: `Nome alterado para '${newName}'.`
+    });
+  };
 
-    const updateRecursively = (items: DocumentItem[]): DocumentItem[] => {
-      return items.map((item) => {
-        if (item.id === id) {
-          return { ...item, name: newName };
-        } else if (item.children) {
-          return { ...item, children: updateRecursively(item.children) };
-        }
-        return item;
+  const handleExportDocument = (item: DocumentItem) => {
+    if (item.type === "file" && item.content) {
+      const element = document.createElement("a");
+      const file = new Blob([item.content], {type: 'text/markdown'});
+      element.href = URL.createObjectURL(file);
+      element.download = `${item.name}.md`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      
+      toast({
+        title: "Documento exportado",
+        description: `${item.name} foi exportado com sucesso.`
       });
-    };
-
-    setDocuments(updateRecursively(documents));
-    toast({
-      title: "Renomeado",
-      description: `Nome alterado para "${newName}".`,
-    });
-  };
-
-  const handleExportDocument = (doc: DocumentItem) => {
-    if (doc.type !== "file" || !doc.content) return;
-    
-    const blob = new Blob([doc.content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${doc.name}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Exportado",
-      description: `Documento "${doc.name}" exportado.`,
-    });
+    }
   };
 
   return {
@@ -141,4 +101,56 @@ export const useDocumentOperations = (
     handleRename,
     handleExportDocument,
   };
+};
+
+// Helper functions
+const addItemToFolder = (items: DocumentItem[], folderId: string, newItem: DocumentItem): DocumentItem[] => {
+  return items.map(item => {
+    if (item.id === folderId && item.type === "folder") {
+      return {
+        ...item,
+        children: [...(item.children || []), newItem],
+      };
+    } else if (item.children) {
+      return {
+        ...item,
+        children: addItemToFolder(item.children, folderId, newItem),
+      };
+    }
+    return item;
+  });
+};
+
+const deleteItem = (items: DocumentItem[], itemId: string): DocumentItem[] => {
+  return items.filter(item => {
+    if (item.id === itemId) {
+      return false;
+    }
+    
+    if (item.children) {
+      item.children = deleteItem(item.children, itemId);
+    }
+    
+    return true;
+  });
+};
+
+const renameItem = (items: DocumentItem[], itemId: string, newName: string): DocumentItem[] => {
+  return items.map(item => {
+    if (item.id === itemId) {
+      return {
+        ...item,
+        name: newName,
+      };
+    }
+    
+    if (item.children) {
+      return {
+        ...item,
+        children: renameItem(item.children, itemId, newName),
+      };
+    }
+    
+    return item;
+  });
 };

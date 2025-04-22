@@ -6,7 +6,6 @@ import { KanbanColumnItem } from "@/components/kanban/types";
 import MindMap from "./MindMap";
 import DocumentEditor from "./DocumentEditor";
 import GanttChart from "./gantt/GanttChart";
-import SpreadsheetEditor from "./spreadsheet/SpreadsheetEditor";
 
 interface ProductionTabsProps {
   columns: KanbanColumnItem[];
@@ -22,9 +21,8 @@ const ProductionTabs = ({ columns, setColumns }: ProductionTabsProps) => {
 
   return (
     <Tabs defaultValue="documentos" className="w-full" onValueChange={handleTabChange}>
-      <TabsList className="grid grid-cols-5 w-full md:w-fit mb-6 bg-card/80 dark:bg-gray-800/40 backdrop-blur-md shadow-md metallic-item">
+      <TabsList className="grid grid-cols-4 w-full md:w-fit mb-6 bg-card/80 dark:bg-gray-800/40 backdrop-blur-md shadow-md metallic-item">
         <TabsTrigger value="documentos" className="text-sm px-4">Documentos</TabsTrigger>
-        <TabsTrigger value="planilhas" className="text-sm px-4">Planilhas</TabsTrigger>
         <TabsTrigger value="gantt" className="text-sm px-4">Gráfico Gantt</TabsTrigger>
         <TabsTrigger value="kanban" className="text-sm px-4">Kanban</TabsTrigger>
         <TabsTrigger value="mapamental" className="text-sm px-4">Mapa Mental</TabsTrigger>
@@ -32,10 +30,6 @@ const ProductionTabs = ({ columns, setColumns }: ProductionTabsProps) => {
       
       <TabsContent value="documentos" className="mt-0">
         <DocumentEditor />
-      </TabsContent>
-      
-      <TabsContent value="planilhas" className="mt-0">
-        <SpreadsheetEditor />
       </TabsContent>
       
       <TabsContent value="gantt" className="mt-0 bg-transparent dark:bg-transparent backdrop-blur-sm shadow-md rounded-lg">
