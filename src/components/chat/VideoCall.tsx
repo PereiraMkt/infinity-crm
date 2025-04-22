@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,9 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 interface VideoCallProps {
   isOpen?: boolean;
   onClose: () => void;
+  onEndCall?: () => void;
 }
 
-const VideoCall = ({ isOpen = false, onClose }: VideoCallProps) => {
+const VideoCall = ({ isOpen = false, onClose, onEndCall }: VideoCallProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [callTime, setCallTime] = useState(0);
@@ -37,6 +37,9 @@ const VideoCall = ({ isOpen = false, onClose }: VideoCallProps) => {
       description: `Duração: ${formatTime(callTime)}`
     });
     onClose();
+    if (onEndCall) {
+      onEndCall();
+    }
   };
   
   const toggleMute = () => {

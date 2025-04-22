@@ -119,7 +119,11 @@ const MeetingVideoContainer = ({ meeting, onLeave }: MeetingVideoContainerProps)
       </div>
       
       <div className="flex-1 overflow-hidden bg-black">
-        <VideoCall onEndCall={onLeave} />
+        <VideoCall 
+          isOpen={true} 
+          onClose={onLeave}
+          onEndCall={onLeave}
+        />
       </div>
       
       {!isMaximized && (

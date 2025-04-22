@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { File, Folder, ChevronDown, ChevronRight, Plus, MoreHorizontal, Trash, Edit, Download, Pencil } from "lucide-react";
 import { Tree, TreeItem } from "@/components/ui/tree";
@@ -100,15 +99,11 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
       children: type === "folder" ? [] : undefined,
     };
     
-    // If a selected folder exists and no specific parent was selected for the new item,
-    // add to the selected folder instead of root
     const effectiveParentId = newItemParentId === null && selectedFolder ? selectedFolder : newItemParentId;
     
     if (effectiveParentId === null) {
-      // Add to root
       setDocuments([...documents, newItem]);
     } else {
-      // Add to specific folder
       const updatedDocs = addItemToFolder(documents, effectiveParentId, newItem);
       setDocuments(updatedDocs);
     }
@@ -144,12 +139,10 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
     const updatedDocs = deleteItem(documents, itemId);
     setDocuments(updatedDocs);
     
-    // If the deleted item was selected, clear selection
     if (selectedFile && selectedFile.id === itemId) {
       onSelectFile(null);
     }
     
-    // If deleted item was the selected folder, clear that too
     if (selectedFolder === itemId) {
       setSelectedFolder(null);
     }
@@ -273,7 +266,7 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
                   }}
                 />
               ) : (
-                <span 
+                <div 
                   className={cn(
                     "cursor-pointer flex-1",
                     selectedFolder === item.id && "font-semibold text-primary"
@@ -281,7 +274,7 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
                   onClick={() => handleFolderClick(item.id)}
                 >
                   {item.name}
-                </span>
+                </div>
               )
             }
             actions={
@@ -331,7 +324,7 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
                   }}
                 />
               ) : (
-                item.name
+                <div>{item.name}</div>
               )
             }
             onClick={() => onSelectFile(item)}
