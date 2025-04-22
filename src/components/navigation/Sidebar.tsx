@@ -21,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import NavSection from "./NavSection";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Navigation sections data
 const mainMenuItems = [
@@ -80,7 +79,7 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
     <>
       <aside 
         className={cn(
-          "sidebar border-r border-gray-200 dark:border-gray-800 h-screen overflow-hidden transition-all duration-300 relative",
+          "sidebar border-r border-gray-200 dark:border-gray-800 overflow-y-auto transition-all duration-300 relative",
           isCollapsed ? "min-w-16 w-16" : "min-w-64 w-64",
           isMobile ? "fixed inset-y-0 left-0 z-20 shadow-lg" : "relative"
         )}
@@ -98,40 +97,38 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
           </div>
         )}
         
-        <ScrollArea className="h-full">
-          <div className="p-4">
-            <NavSection 
-              title="Menu Principal" 
-              items={mainMenuItems} 
-              isCollapsed={isCollapsed}
-              onItemClick={() => isMobile && setOpen(false)}
-            />
-            
-            <NavSection 
-              title="Integrações" 
-              items={integrationItems} 
-              isCollapsed={isCollapsed}
-              onItemClick={() => isMobile && setOpen(false)}
-              className="mt-6"
-            />
-            
-            <NavSection 
-              title="Gestão" 
-              items={managementItems} 
-              isCollapsed={isCollapsed}
-              onItemClick={() => isMobile && setOpen(false)}
-              className="mt-6"
-            />
-            
-            <NavSection 
-              title="Sistema" 
-              items={systemItems} 
-              isCollapsed={isCollapsed}
-              onItemClick={() => isMobile && setOpen(false)}
-              className="mt-6"
-            />
-          </div>
-        </ScrollArea>
+        <div className="p-4">
+          <NavSection 
+            title="Menu Principal" 
+            items={mainMenuItems} 
+            isCollapsed={isCollapsed}
+            onItemClick={() => isMobile && setOpen(false)}
+          />
+          
+          <NavSection 
+            title="Integrações" 
+            items={integrationItems} 
+            isCollapsed={isCollapsed}
+            onItemClick={() => isMobile && setOpen(false)}
+            className="mt-6"
+          />
+          
+          <NavSection 
+            title="Gestão" 
+            items={managementItems} 
+            isCollapsed={isCollapsed}
+            onItemClick={() => isMobile && setOpen(false)}
+            className="mt-6"
+          />
+          
+          <NavSection 
+            title="Sistema" 
+            items={systemItems} 
+            isCollapsed={isCollapsed}
+            onItemClick={() => isMobile && setOpen(false)}
+            className="mt-6"
+          />
+        </div>
       </aside>
       
       {/* Collapse button positioned at the same height as the chat button */}
