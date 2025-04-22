@@ -1,4 +1,7 @@
+
 import { useState } from "react";
+import { Plus } from "lucide-react"; 
+import { Button } from "@/components/ui/button";
 import { FunnelHeader } from "@/components/sales-funnel/FunnelHeader";
 import { FunnelAnalytics } from "@/components/sales-funnel/FunnelAnalytics";
 import { NewLeadDialog } from "@/components/sales-funnel/NewLeadDialog";

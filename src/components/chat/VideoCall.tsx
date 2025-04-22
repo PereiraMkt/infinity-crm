@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
 interface VideoCallProps {
-  onEndCall: () => void;
+  isOpen?: boolean;
+  onClose: () => void;
 }
 
-const VideoCall = ({ onEndCall }: VideoCallProps) => {
+const VideoCall = ({ isOpen = false, onClose }: VideoCallProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [callTime, setCallTime] = useState(0);
@@ -35,7 +36,7 @@ const VideoCall = ({ onEndCall }: VideoCallProps) => {
       title: "Chamada finalizada",
       description: `Duração: ${formatTime(callTime)}`
     });
-    onEndCall();
+    onClose();
   };
   
   const toggleMute = () => {
@@ -51,6 +52,8 @@ const VideoCall = ({ onEndCall }: VideoCallProps) => {
       title: isVideoOn ? "Câmera desativada" : "Câmera ativada"
     });
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="flex flex-col h-full">

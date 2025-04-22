@@ -256,32 +256,34 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
           <TreeItem 
             key={item.id}
             icon={<Folder className={cn("h-4 w-4", selectedFolder === item.id ? "text-primary" : "text-muted-foreground")} />}
-            label={isEditing ? (
-              <Input
-                size={1}
-                className="h-6 py-1 text-xs"
-                defaultValue={editingItem.name}
-                autoFocus
-                onBlur={(e) => handleRename(item.id, e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleRename(item.id, e.currentTarget.value);
-                  } else if (e.key === 'Escape') {
-                    setEditingItem(null);
-                  }
-                }}
-              />
-            ) : (
-              <span 
-                className={cn(
-                  "cursor-pointer flex-1",
-                  selectedFolder === item.id && "font-semibold text-primary"
-                )}
-                onClick={() => handleFolderClick(item.id)}
-              >
-                {item.name}
-              </span>
-            )}
+            label={
+              isEditing ? (
+                <Input
+                  size={1}
+                  className="h-6 py-1 text-xs"
+                  defaultValue={editingItem.name}
+                  autoFocus
+                  onBlur={(e) => handleRename(item.id, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleRename(item.id, e.currentTarget.value);
+                    } else if (e.key === 'Escape') {
+                      setEditingItem(null);
+                    }
+                  }}
+                />
+              ) : (
+                <span 
+                  className={cn(
+                    "cursor-pointer flex-1",
+                    selectedFolder === item.id && "font-semibold text-primary"
+                  )}
+                  onClick={() => handleFolderClick(item.id)}
+                >
+                  {item.name}
+                </span>
+              )
+            }
             actions={
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -312,22 +314,26 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = ({ onSelectFile, selec
           <TreeItem
             key={item.id}
             icon={<File className={cn("h-4 w-4", isSelected ? "text-primary" : "text-muted-foreground")} />}
-            label={isEditing ? (
-              <Input
-                size={1}
-                className="h-6 py-1 text-xs"
-                defaultValue={editingItem.name}
-                autoFocus
-                onBlur={(e) => handleRename(item.id, e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleRename(item.id, e.currentTarget.value);
-                  } else if (e.key === 'Escape') {
-                    setEditingItem(null);
-                  }
-                }}
-              />
-            ) : item.name}
+            label={
+              isEditing ? (
+                <Input
+                  size={1}
+                  className="h-6 py-1 text-xs"
+                  defaultValue={editingItem.name}
+                  autoFocus
+                  onBlur={(e) => handleRename(item.id, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleRename(item.id, e.currentTarget.value);
+                    } else if (e.key === 'Escape') {
+                      setEditingItem(null);
+                    }
+                  }}
+                />
+              ) : (
+                item.name
+              )
+            }
             onClick={() => onSelectFile(item)}
             className={cn(isSelected && "bg-primary/10")}
             actions={

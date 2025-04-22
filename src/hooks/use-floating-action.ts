@@ -13,6 +13,7 @@ export const useFloatingAction = ({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activePanel, setActivePanel] = useState<string | null>(null);
   const [chatHeight, setChatHeight] = useState(500);
   const [chatWidth, setChatWidth] = useState(350);
   const [isResizing, setIsResizing] = useState(false);
@@ -49,10 +50,12 @@ export const useFloatingAction = ({
     isOpen,
     isFullScreen,
     activeTab,
+    activePanel,
     chatHeight,
     chatWidth,
     isResizing,
     setActiveTab,
+    setActivePanel,
     toggleOpen,
     toggleFullScreen,
     setFloatingActionOpen,
