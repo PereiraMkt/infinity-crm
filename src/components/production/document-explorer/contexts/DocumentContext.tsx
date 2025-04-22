@@ -1,48 +1,51 @@
 
-import React, { createContext, useContext, useState } from 'react';
-import { DocumentItem } from '../types';
-
-interface DocumentContextType {
-  documents: DocumentItem[];
-  setDocuments: (docs: DocumentItem[]) => void;
-  selectedFolder: string | null;
-  setSelectedFolder: (id: string | null) => void;
-  editingItem: { id: string; name: string } | null;
-  setEditingItem: (item: { id: string; name: string } | null) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-}
+import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { DocumentItem, DocumentContextType } from '../types';
 
 const DocumentContext = createContext<DocumentContextType | undefined>(undefined);
 
-export const useDocumentContext = () => {
-  const context = useContext(DocumentContext);
-  if (!context) {
-    throw new Error('useDocumentContext must be used within a DocumentProvider');
-  }
-  return context;
-};
+interface DocumentProviderProps {
+  children: ReactNode;
+  initialDocuments?: DocumentItem[];
+  onDocumentsChange?: (documents: DocumentItem[]) => void;
+}
 
-export const DocumentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+export const DocumentProvider: React.FC<DocumentProviderProps> = ({ children, initialDocuments = [], onDocumentsChange }) => {
+  const [documents, setDocumentsState] = useState<DocumentItem[]>(initialDocuments);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<{ id: string; name: string } | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  const setDocuments = (docs: React.SetStateAction<DocumentItem[]>) => {
+    const newDocs = typeof docs === 'function' ? docs(documents) : docs;
+    setDocumentsState(newDocs);
+    if (onDocumentsChange) {
+      onDocumentsChange(newDocs);
+    }
+  };
+  
+  const value: DocumentContextType = {
+    documents,
+    setDocuments,
+    selectedFolder,
+    setSelectedFolder,
+    editingItem,
+    setEditingItem,
+    searchQuery,
+    setSearchQuery
+  };
+  
   return (
-    <DocumentContext.Provider 
-      value={{
-        documents,
-        setDocuments,
-        selectedFolder,
-        setSelectedFolder,
-        editingItem,
-        setEditingItem,
-        searchQuery,
-        setSearchQuery,
-      }}
-    >
+    <DocumentContext.Provider value={value}>
       {children}
     </DocumentContext.Provider>
   );
+};
+
+export const useDocumentContext = (): DocumentContextType => {
+  const context = useContext(DocumentContext);
+  if (context === undefined) {
+    throw new Error('useDocumentContext must be used within a DocumentProvider');
+  }
+  return context;
 };

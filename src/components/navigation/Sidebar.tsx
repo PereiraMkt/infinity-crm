@@ -12,8 +12,6 @@ import {
   Video, 
   Settings,
   X,
-  ChevronLeft,
-  ChevronRight,
   MessageCircle,
   Zap
 } from "lucide-react";
@@ -64,92 +62,63 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
       setCollapsed(false);
     }
   }, [isMobile, open, setOpen]);
-  
-  const toggleCollapse = () => {
-    if (isMobile) {
-      setOpen(!open);
-    } else {
-      setCollapsed(!collapsed);
-    }
-  };
 
   if (!open) return null;
 
   return (
-    <>
-      <aside 
-        className={cn(
-          "sidebar border-r border-gray-200 dark:border-gray-800 overflow-y-auto transition-all duration-300 relative",
-          isCollapsed ? "min-w-16 w-16" : "min-w-64 w-64",
-          isMobile ? "fixed inset-y-0 left-0 z-20 shadow-lg" : "relative"
-        )}
-      >
-        {isMobile && (
-          <div className="flex justify-end p-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setOpen(false)}
-              aria-label="Close Sidebar"
-            >
-              <X size={18} />
-            </Button>
-          </div>
-        )}
-        
-        <div className="p-4">
-          <NavSection 
-            title="Menu Principal" 
-            items={mainMenuItems} 
-            isCollapsed={isCollapsed}
-            onItemClick={() => isMobile && setOpen(false)}
-          />
-          
-          <NavSection 
-            title="Integrações" 
-            items={integrationItems} 
-            isCollapsed={isCollapsed}
-            onItemClick={() => isMobile && setOpen(false)}
-            className="mt-6"
-          />
-          
-          <NavSection 
-            title="Gestão" 
-            items={managementItems} 
-            isCollapsed={isCollapsed}
-            onItemClick={() => isMobile && setOpen(false)}
-            className="mt-6"
-          />
-          
-          <NavSection 
-            title="Sistema" 
-            items={systemItems} 
-            isCollapsed={isCollapsed}
-            onItemClick={() => isMobile && setOpen(false)}
-            className="mt-6"
-          />
+    <aside 
+      className={cn(
+        "sidebar border-r border-gray-200 dark:border-gray-800 overflow-y-auto transition-all duration-300 relative",
+        isCollapsed ? "min-w-16 w-16" : "min-w-64 w-64",
+        isMobile ? "fixed inset-y-0 left-0 z-20 shadow-lg" : "relative"
+      )}
+    >
+      {isMobile && (
+        <div className="flex justify-end p-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setOpen(false)}
+            aria-label="Close Sidebar"
+          >
+            <X size={18} />
+          </Button>
         </div>
-      </aside>
+      )}
       
-      {/* Collapse button positioned at the same height as the chat button */}
-      <div 
-        className={cn(
-          "fixed z-40 transition-all duration-300",
-          open ? (isCollapsed ? "left-[4.5rem]" : "left-[16.5rem]") : "left-4",
-          "top-[calc(100vh-7rem)]" // Position it in line with chat button
-        )}
-      >
-        <Button 
-          variant="default" 
-          size="icon" 
-          className="rounded-full h-9 w-9 shadow-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(130,80,223,0.4)]"
-          onClick={toggleCollapse}
-          aria-label={open ? "Recolher Menu" : "Expandir Menu"}
-        >
-          {open ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-        </Button>
+      <div className="p-4">
+        <NavSection 
+          title="Menu Principal" 
+          items={mainMenuItems} 
+          isCollapsed={isCollapsed}
+          onItemClick={() => isMobile && setOpen(false)}
+        />
+        
+        <NavSection 
+          title="Integrações" 
+          items={integrationItems} 
+          isCollapsed={isCollapsed}
+          onItemClick={() => isMobile && setOpen(false)}
+          className="mt-6"
+        />
+        
+        <NavSection 
+          title="Gestão" 
+          items={managementItems} 
+          isCollapsed={isCollapsed}
+          onItemClick={() => isMobile && setOpen(false)}
+          className="mt-6"
+        />
+        
+        <NavSection 
+          title="Sistema" 
+          items={systemItems} 
+          isCollapsed={isCollapsed}
+          onItemClick={() => isMobile && setOpen(false)}
+          className="mt-6"
+        />
       </div>
-    </>
+    </aside>
   );
 };
 

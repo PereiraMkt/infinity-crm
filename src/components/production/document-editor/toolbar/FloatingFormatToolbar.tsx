@@ -72,7 +72,7 @@ const FontSizeSelector = ({ onFormatAction }: { onFormatAction: (action: string,
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
       <button className="p-1 text-white hover:bg-gray-700 rounded">
-        <Type size={16} />
+        <Type size={14} />
       </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white">
@@ -93,7 +93,7 @@ const ColorSelector = ({ onFormatAction }: { onFormatAction: (action: string, va
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
       <button className="p-1 text-white hover:bg-gray-700 rounded">
-        <Palette size={16} />
+        <Palette size={14} />
       </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent className="bg-gray-800 border-gray-700 text-white p-2">
@@ -104,7 +104,7 @@ const ColorSelector = ({ onFormatAction }: { onFormatAction: (action: string, va
             <div 
               key={color.value} 
               onClick={() => onFormatAction('foreColor', color.value)}
-              className="w-5 h-5 rounded-full cursor-pointer hover:scale-110 transition-transform border border-gray-600"
+              className="w-4 h-4 rounded-full cursor-pointer hover:scale-110 transition-transform border border-gray-600"
               style={{ backgroundColor: color.bg }}
               title={color.label}
             />
@@ -118,7 +118,7 @@ const ColorSelector = ({ onFormatAction }: { onFormatAction: (action: string, va
             <div 
               key={bg.value} 
               onClick={() => onFormatAction('hiliteColor', bg.value)}
-              className="w-5 h-5 rounded-full cursor-pointer hover:scale-110 transition-transform border border-gray-600"
+              className="w-4 h-4 rounded-full cursor-pointer hover:scale-110 transition-transform border border-gray-600"
               style={{ backgroundColor: bg.bg }}
               title={bg.label}
             />
@@ -132,89 +132,86 @@ const ColorSelector = ({ onFormatAction }: { onFormatAction: (action: string, va
 const FloatingFormatToolbar: React.FC<FloatingFormatToolbarProps> = ({ position, onFormatAction }) => {
   return (
     <div 
-      className="floating-format-toolbar absolute z-50 bg-gray-800 dark:bg-gray-900 rounded-md shadow-lg p-1 flex items-center gap-1 transition-opacity"
+      className="floating-format-toolbar absolute z-50 bg-gray-800 dark:bg-gray-900 rounded-md shadow-lg py-1 px-0.5 flex items-center gap-0.5 transition-opacity"
       style={{
-        top: `${position.top}px`,
+        top: `${position.top - 10}px`,
         left: `${position.left}px`,
         transform: 'translateX(-50%)',
       }}
     >
-      <button onClick={() => onFormatAction('bold')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Bold size={16} />
+      <button onClick={() => onFormatAction('bold')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Bold size={14} />
       </button>
-      <button onClick={() => onFormatAction('italic')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Italic size={16} />
+      <button onClick={() => onFormatAction('italic')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Italic size={14} />
       </button>
-      <button onClick={() => onFormatAction('underline')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Underline size={16} />
+      <button onClick={() => onFormatAction('underline')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Underline size={14} />
       </button>
-      <button onClick={() => onFormatAction('strikeThrough')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Strikethrough size={16} />
+      <button onClick={() => onFormatAction('strikeThrough')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Strikethrough size={14} />
       </button>
       
-      <span className="h-4 w-px bg-gray-600 mx-1"></span>
+      <span className="h-3.5 w-px bg-gray-600 mx-0.5"></span>
       
       <FontSizeSelector onFormatAction={onFormatAction} />
       <ColorSelector onFormatAction={onFormatAction} />
       
-      <span className="h-4 w-px bg-gray-600 mx-1"></span>
+      <span className="h-3.5 w-px bg-gray-600 mx-0.5"></span>
       
-      <button onClick={() => onFormatAction('formatBlock', '<h1>')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Heading1 size={16} />
+      <button onClick={() => onFormatAction('formatBlock', '<h1>')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Heading1 size={14} />
       </button>
-      <button onClick={() => onFormatAction('formatBlock', '<h2>')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Heading2 size={16} />
+      <button onClick={() => onFormatAction('formatBlock', '<h2>')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Heading2 size={14} />
       </button>
-      <button onClick={() => onFormatAction('formatBlock', '<h3>')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Heading3 size={16} />
-      </button>
-      
-      <span className="h-4 w-px bg-gray-600 mx-1"></span>
-      
-      <button onClick={() => onFormatAction('justifyLeft')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <AlignLeft size={16} />
-      </button>
-      <button onClick={() => onFormatAction('justifyCenter')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <AlignCenter size={16} />
-      </button>
-      <button onClick={() => onFormatAction('justifyRight')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <AlignRight size={16} />
-      </button>
-      <button onClick={() => onFormatAction('justifyFull')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <AlignJustify size={16} />
+      <button onClick={() => onFormatAction('formatBlock', '<h3>')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Heading3 size={14} />
       </button>
       
-      <span className="h-4 w-px bg-gray-600 mx-1"></span>
+      <span className="h-3.5 w-px bg-gray-600 mx-0.5"></span>
       
-      <button onClick={() => onFormatAction('insertUnorderedList')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <List size={16} />
+      <button onClick={() => onFormatAction('justifyLeft')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <AlignLeft size={14} />
       </button>
-      <button onClick={() => onFormatAction('insertOrderedList')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <ListOrdered size={16} />
+      <button onClick={() => onFormatAction('justifyCenter')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <AlignCenter size={14} />
       </button>
-      <button onClick={() => onFormatAction('formatBlock', '<blockquote>')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Quote size={16} />
+      <button onClick={() => onFormatAction('justifyRight')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <AlignRight size={14} />
+      </button>
+      <button onClick={() => onFormatAction('justifyFull')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <AlignJustify size={14} />
       </button>
       
-      <span className="h-4 w-px bg-gray-600 mx-1"></span>
+      <span className="h-3.5 w-px bg-gray-600 mx-0.5"></span>
+      
+      <button onClick={() => onFormatAction('insertUnorderedList')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <List size={14} />
+      </button>
+      <button onClick={() => onFormatAction('insertOrderedList')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <ListOrdered size={14} />
+      </button>
+      
+      <span className="h-3.5 w-px bg-gray-600 mx-0.5"></span>
       
       <button onClick={() => {
         const url = prompt('Enter link URL:');
         if (url) onFormatAction('createLink', url);
-      }} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Link size={16} />
+      }} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Link size={14} />
       </button>
-      <button onClick={() => onFormatAction('formatBlock', '<pre>')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Code size={16} />
+      <button onClick={() => onFormatAction('formatBlock', '<pre>')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Code size={14} />
       </button>
       <button onClick={() => {
         const url = prompt('Enter image URL:');
         if (url) onFormatAction('insertImage', url);
-      }} className="p-1 text-white hover:bg-gray-700 rounded">
-        <Image size={16} />
+      }} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Image size={14} />
       </button>
-      <button onClick={() => onFormatAction('formatBlock', '<blockquote>')} className="p-1 text-white hover:bg-gray-700 rounded">
-        <TextQuote size={16} />
+      <button onClick={() => onFormatAction('formatBlock', '<blockquote>')} className="p-0.5 text-white hover:bg-gray-700 rounded">
+        <Quote size={14} />
       </button>
     </div>
   );

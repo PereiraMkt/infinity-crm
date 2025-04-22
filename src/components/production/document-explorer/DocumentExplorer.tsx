@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tree } from "@/components/ui/tree";
 import { DocumentProvider } from "./contexts/DocumentContext";
@@ -59,10 +60,17 @@ const initialDocuments: DocumentItem[] = [
 interface DocumentExplorerProps {
   onSelectFile: (file: DocumentItem) => void;
   selectedFile: DocumentItem | null;
+  onAddDocument?: (document: DocumentItem) => void;
+  selectedFolder?: string | null;
 }
 
-const DocumentExplorerContent: React.FC<DocumentExplorerProps> = ({ onSelectFile, selectedFile }) => {
-  const { documents, searchQuery } = useDocumentContext();
+const DocumentExplorerContent: React.FC<DocumentExplorerProps> = ({ 
+  onSelectFile, 
+  selectedFile,
+  onAddDocument,
+  selectedFolder: propSelectedFolder
+}) => {
+  const { documents, searchQuery, selectedFolder, setSelectedFolder } = useDocumentContext();
   const {
     newItemDialogOpen,
     setNewItemDialogOpen,
@@ -71,7 +79,14 @@ const DocumentExplorerContent: React.FC<DocumentExplorerProps> = ({ onSelectFile
     handleDeleteItem,
     handleRename,
     handleExportDocument,
-  } = useDocumentOperations(onSelectFile);
+  } = useDocumentOperations(onSelectFile, onAddDocument);
+
+  // Sync selected folder from props if provided
+  React.useEffect(() => {
+    if (propSelectedFolder !== undefined) {
+      setSelectedFolder(propSelectedFolder);
+    }
+  }, [propSelectedFolder, setSelectedFolder]);
 
   const renderItems = (items: DocumentItem[]) => {
     if (!items || items.length === 0) return null;
@@ -111,6 +126,7 @@ const DocumentExplorerContent: React.FC<DocumentExplorerProps> = ({ onSelectFile
         open={newItemDialogOpen}
         onOpenChange={setNewItemDialogOpen}
         onCreateItem={handleCreateItem}
+        selectedFolder={selectedFolder}
       />
     </div>
   );
@@ -120,7 +136,7 @@ const DocumentExplorer: React.FC<DocumentExplorerProps> = (props) => {
   const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
 
   return (
-    <DocumentProvider>
+    <DocumentProvider initialDocuments={documents} onDocumentsChange={setDocuments}>
       <DocumentExplorerContent {...props} />
     </DocumentProvider>
   );
